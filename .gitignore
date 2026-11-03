@@ -1,0 +1,49 @@
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleasePublic/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio cache & user settings
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+## VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+## Rider
+.idea/
+*.sln.iml
+
+## Test Results
+TestResults/
+[Tt]est[Rr]esult*/
+
+## Environment / Secrets
+*.env
+*.env.*
+!*.env.example
+appsettings*.Development.json
+appsettings*.Local.json
+secrets.json
+
+## OS files
+.DS_Store
+Thumbs.db
+desktop.ini
