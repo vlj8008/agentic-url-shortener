@@ -32,17 +32,18 @@ Designed for high-reliability enterprise environments (such as financial service
 
 ```text
 ├── specs/
-│   ├── constitution.md    # Non-negotiable security guardrails & SDLC rules
-│   ├── spec.md            # OpenAPI 3.1 contract and data schemas
-│   ├── plan.md            # System architecture, state machine & dependency graph
-│   └── tasks.md           # Discrete, testable engineering tasks
+│   ├── ENGINEERING_CONSTITUTION.md # Layer 1: Universal Engineering & OWASP API Standards
+│   ├── constitution.md             # Layer 2: URL Shortener Domain Security Addendum
+│   ├── spec.md                     # OpenAPI 3.1 contract and data schemas
+│   ├── plan.md                     # System architecture, state machine & dependency graph
+│   └── tasks.md                    # Discrete, testable engineering tasks
 ├── src/
-│   ├── UrlShortener.Api/  # Production C# / .NET 9 Minimal API service
-│   └── Orchestrator.Cli/  # Runnable C# SDLC Workflow Orchestrator (State Machine)
+│   ├── UrlShortener.Api/           # Production C# / .NET 9 Minimal API service
+│   └── Orchestrator.Cli/           # Runnable C# SDLC Workflow Orchestrator (State Machine)
 ├── tests/
-│   ├── UrlShortener.UnitTests/        # Domain logic and hashing tests
-│   ├── UrlShortener.ContractTests/    # OpenAPI schema validation tests
-│   └── UrlShortener.SecurityTests/    # SSRF, rate limit, and abuse tests
+│   ├── UrlShortener.UnitTests/     # Domain logic and hashing tests
+│   ├── UrlShortener.ContractTests/ # OpenAPI schema validation tests
+│   └── UrlShortener.SecurityTests/ # SSRF, rate limit, and abuse tests
 └── README.md
 ```
 
