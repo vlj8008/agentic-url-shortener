@@ -1,0 +1,57 @@
+name: Agentic SDLC Governance & .NET CI Pipeline
+
+on:
+  push:
+    branches: [ main, "**" ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-test:
+    name: Shift-Left Governance & .NET Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Gate 0 — Constitutional & Spec Artifact Verification
+        run: |
+          echo "🔍 Verifying mandatory constitutional governance artifacts..."
+          for file in "README.md" "specs/ENGINEERING_CONSTITUTION.md" "specs/constitution.md"; do
+            if [ ! -s "$file" ]; then
+              echo "❌ ERROR: Mandatory governance artifact '$file' is missing or empty!"
+              exit 1
+            fi
+            echo "✅ Verified: $file"
+          done
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Gate 3 — .NET Supply-Chain Audit, Build & Automated Test Suite
+        run: |
+          SLN_FILES=$(find . -maxdepth 2 -name "*.sln")
+          if [ -z "$SLN_FILES" ]; then
+            echo "ℹ️ No .sln file present yet (Specification & Architecture Phase). Skipping .NET build/test until C# solution is scaffolded."
+            exit 0
+          fi
+
+          echo "📦 Restoring NuGet dependencies..."
+          dotnet restore
+
+          echo "🛡️ Auditing NuGet dependencies for known vulnerabilities (Principle 4)..."
+          dotnet list package --vulnerable
+
+          echo "🔨 Building solution in Release configuration with zero errors (Principle 2)..."
+          dotnet build --no-restore --configuration Release
+
+          echo "🧪 Executing full Unit, Contract, and Security Test Suite (Principle 2 & 5)..."
+          dotnet test --no-build --configuration Release --verbosity normal
