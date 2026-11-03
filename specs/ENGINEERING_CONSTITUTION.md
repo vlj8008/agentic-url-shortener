@@ -1,7 +1,6 @@
 # Universal Engineering Constitution & Agent Governance Standards
 
-**Master Location**: `C:\Users\vicky\source\repos\ENGINEERING_CONSTITUTION.md`  
-**Repository Mirror**: `specs/ENGINEERING_CONSTITUTION.md`  
+**Location**: `specs/ENGINEERING_CONSTITUTION.md`  
 **Scope**: Universal baseline for all software engineering projects, C# / .NET solutions, and autonomous agent workflows.
 
 ---
@@ -46,7 +45,12 @@ Our core philosophy is **Controlled Autonomy**: AI agents execute multi-step eng
   * Every repository must maintain a GitHub Actions workflow (`.github/workflows/ci.yml`) that automatically builds the solution and executes the entire test suite on every `push` and `pull_request` to ensure continuous build verification.
   * Agents working on major features must use feature branches and Pull Requests, enabling GitHub Actions to validate code in an isolated cloud runner before the human engineer conducts final review and merges into `main`.
 
-### Principle 3: Spec-Driven Development, Ambiguity Resolution & Brownfield Reasoning
+### Principle 3: Spec-Driven Development (GitHub Spec Kit Pattern), Ambiguity Resolution & Brownfield Reasoning
+* **Standard 4-Artifact SDD Lifecycle**: Every project must maintain a `specs/` directory enforcing the GitHub Spec-Driven Development (`Spec Kit`) artifact sequence before writing production code:
+  1. `specs/constitution.md` — Domain-specific rules, cryptographic/security guardrails, and performance budgets (inheriting from `specs/ENGINEERING_CONSTITUTION.md`).
+  2. `specs/spec.md` — Product intent, resolved ambiguities, edge cases, and formal OpenAPI 3.1 / schema contracts (**Gate 1 Approval**).
+  3. `specs/plan.md` — System architecture, state machine / data flow, and Architectural Decision Records (ADRs) (**Gate 2 Approval**).
+  4. `specs/tasks.md` — Non-linear dependency graph and discrete, testable engineering tasks (**Gate 2 Approval**).
 * **Ambiguity Detection & Intent Normalization**:
   * Agents must never silently guess when requirements are vague, incomplete, or contradictory.
   * Before drafting a specification, the agent must identify ambiguities, explicitly document defensible assumptions, or pause to request human clarification.
@@ -77,6 +81,7 @@ Our core philosophy is **Controlled Autonomy**: AI agents execute multi-step eng
   * `400 Bad Request` for malformed or unvalidated input.
   * `401 Unauthorized` for missing or invalid authentication credentials.
   * `403 Forbidden` for authenticated users lacking authorization for the resource.
+  * `409 Conflict` when a requested unique resource or custom identifier already exists.
   * `429 Too Many Requests` when rate limits or throttling thresholds are exceeded.
 * **Defensive Resilience**: Implement rate limiting, timeout handling, circuit breakers, and idempotency keys to protect services against distributed denial-of-service (DDoS) and cascade failures.
 
@@ -131,4 +136,4 @@ Our core philosophy is **Controlled Autonomy**: AI agents execute multi-step eng
 
 ## 🔄 Reusability Across Projects
 
-Every new project created in `C:\Users\vicky\source\repos\` automatically inherits this Constitution. Project-specific requirements (such as specialized cryptographic algorithms, domain entities, or specific cloud infrastructure) are documented in the project's local [`specs/constitution.md`](./constitution.md) as an addendum to this master document.
+Every project in the engineering workspace automatically inherits this Constitution. Project-specific requirements (such as specialized cryptographic algorithms, domain entities, or specific cloud infrastructure) are documented in the project's local [`specs/constitution.md`](./constitution.md) as an addendum to this master document.

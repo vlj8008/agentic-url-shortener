@@ -19,7 +19,7 @@ This project is governed by a **Two-Tiered Constitutional Architecture**:
 * **Alphabet**: Short codes must use the standard Base62 character set (`0-9`, `a-z`, `A-Z`) to remain URL-safe without percent-encoding.
 * **Key Length & Entropy**: Default generated short codes must be **7 characters** in length ($62^7 \approx 3.52 \times 10^{12}$ unique combinations), generated via `System.Security.Cryptography.RandomNumberGenerator` rather than predictable `System.Random` or sequential database IDs.
 * **Collision Resolution**: If a generated short code collides with an existing active record, the service must retry generation up to a bounded limit of **3 attempts** before returning a standardized `503 Service Unavailable` `ProblemDetails` response.
-* **Custom Aliases**: Optional user-supplied custom aliases must be validated against a strict regex (`^[a-zA-Z0-9_-]{4,32}$`) and checked against a reserved-word blocklist (`api`, `health`, `admin`, `swagger`, `metrics`).
+* **Custom Aliases**: Optional user-supplied custom aliases must be validated against a strict regex (`^[a-zA-Z0-9_-]{4,32}$`) and checked against a reserved-word blocklist (`api`, `health`, `admin`, `swagger`, `metrics`). If a requested custom alias already exists, the service must immediately return `409 Conflict` with an RFC 7807 `ProblemDetails` response rather than retrying random generation.
 
 ### Domain Rule 2: Destination URL Validation & Anti-SSRF Enforcement
 * **Scheme Whitelist**: Destination URLs must use `https://` in production (with `http://` configurable only for local development/testing environments). Dangerous schemes (`javascript:`, `data:`, `file:`, `vbscript:`, `ftp:`) must be rejected immediately with `400 Bad Request`.
@@ -42,6 +42,12 @@ This project is governed by a **Two-Tiered Constitutional Architecture**:
 * **Performance Budget**: Redirection (`GET /{shortCode}`) must target **sub-50ms p99 latency** by caching active short-code mappings in memory (`IMemoryCache`) and never blocking the HTTP redirect response on analytics database writes.
 * **Non-Blocking Click Tracking**: Click events must be published to an in-memory bounded channel (`System.Threading.Channels.Channel<ClickEvent>`) or processed asynchronously so database latency never slows down user redirection.
 * **Privacy & Compliance**: Client IP addresses must never be stored in raw plain text in analytics tables; they must be hashed (SHA-256 with salt) or truncated to preserve user privacy while still enabling unique-visitor estimation.
+
+### Domain Rule 6: Reusable & Domain-Agnostic Orchestration Engine (`Orchestrator.Cli`)
+* **Decoupled Architecture**: The core orchestration state machine, human approval gates (`[A]pprove / [R]eject / [S]afe-stop`), pre-execution Git snapshot/rollback manager, bounded retry runner ($\le 3$ attempts on `dotnet build`/`dotnet test` failures), and telemetry logger must be decoupled from the URL Shortener domain via clean abstractions and dependency injection.
+* **Dual Purpose (Evaluation + Permanent Reusability)**:
+  * **Default Mode**: When executed with default arguments (`dotnet run --project src/Orchestrator.Cli`), runs the Charles Schwab evaluation scenarios out of the box with zero external dependencies.
+  * **Portable Tooling Mode**: The CLI must support reusable commands and flags (such as `--workspace <path>`, `--init`, and `--verify`) allowing Vicky to reuse the orchestrator across any greenfield or brownfield software repository in `source/repos/` and future boutique consultancy client projects.
 
 ---
 
