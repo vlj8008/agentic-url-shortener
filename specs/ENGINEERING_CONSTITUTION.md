@@ -117,8 +117,10 @@ Our core philosophy is **Controlled Autonomy**: AI agents execute multi-step eng
 * **Database Performance & Safety**:
   * Read-only Entity Framework Core queries must use `.AsNoTracking()` to avoid unnecessary change-tracking memory overhead.
   * Avoid `N+1` query traps and always use version-controlled, backward-compatible database migrations.
-* **Atomic & Conventional Commits**:
-  * Commits must be small, atomic, and follow Conventional Commits (`feat:`, `fix:`, `security:`, `refactor:`, `test:`, `docs:`) so any single change can be cleanly audited or rolled back without side effects.
+* **Branch-Per-Change Workflow & Atomic Conventional Commits**:
+  * **Never Commit Directly to `main`**: Before starting any change, always switch to `main`, pull the latest remote changes (`git checkout main` and `git pull origin main`), and create a dedicated feature branch (`git checkout -b <branch-name>`).
+  * **Atomic Commits**: Commits must be small, atomic, and follow Conventional Commits (`feat:`, `fix:`, `security:`, `refactor:`, `test:`, `docs:`) so any single change can be cleanly audited or rolled back without side effects.
+  * **Pull Request Merge**: Push feature branches to remote (`git push -u origin <branch-name>`) and merge into `main` via Pull Request after verification gates pass.
 * **Architectural Decision Records (ADRs) & Final Engineering Summaries**:
   * Whenever a significant architectural or technical trade-off is made, the agent must record the **Context, Options Considered, Trade-offs, and Rationale** so decision lineage is preserved for audits and engineering reviews.
   * Every completed feature or workflow must produce a **Final Engineering Summary** documenting the implementation rationale, produced artifacts, risks/trade-offs, validation results, assumptions, and known limitations.
