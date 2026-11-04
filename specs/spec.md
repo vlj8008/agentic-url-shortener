@@ -3,7 +3,7 @@
 **Feature Branch**: `spec/spec-md`  
 **Created**: 2026-11-03  
 **Status**: Draft (Pending Gate 1 Sign-Off)  
-**Input Source**: Charles Schwab Interview Assignment (`Build an Agentic Software Engineering System — URL Shortener`)  
+**Input Source**: Enterprise Architecture Specification (`Build an Agentic Software Engineering System — URL Shortener`)  
 **Parent Constitutions**:
 - Universal Engineering Constitution: [`specs/ENGINEERING_CONSTITUTION.md`](./ENGINEERING_CONSTITUTION.md)
 - Domain Constitution Addendum: [`specs/constitution.md`](./constitution.md)
@@ -42,7 +42,7 @@ In accordance with GitHub Spec Kit's `/speckit.clarify` phase and Principle 3 of
 **Independent Testability**: Can be fully verified by sending a valid `POST /api/v1/urls` request, confirming the returned `201 Created` payload with short code, and executing `GET /{shortCode}` to verify a sub-50ms `302 Found` redirection.
 
 **Acceptance Scenarios**:
-1. **Given** a valid, public destination URL (`https://www.schwab.com/investment-portfolio`),  
+1. **Given** a valid, public destination URL (`https://www.enterprise-finance.example.com/investment-portfolio`),  
    **When** a client sends `POST /api/v1/urls` with this destination,  
    **Then** the service returns HTTP `201 Created` with a `Location` header pointing to `/api/v1/urls/{shortCode}`, a 7-character Base62 `shortCode`, the full `shortUrl`, and UTC timestamps for `createdAt`.
 2. **Given** an invalid or dangerous destination URL (e.g., `javascript:alert(1)`, `http://169.254.169.254/latest/meta-data`, `http://localhost:8080`, or a non-HTTPS scheme in production),  
@@ -86,7 +86,7 @@ In accordance with GitHub Spec Kit's `/speckit.clarify` phase and Principle 3 of
 *I want the system to automatically analyze vague stakeholder requests, identify unstated assumptions or boundary conditions, and prompt for clarification,*  
 *So that requirements are formally normalized into executable contracts before architectural planning or coding begins.*
 
-**Why this priority**: Directly demonstrates the Requirement Understanding and Ambiguity Normalization capabilities required in Section 4 of the Charles Schwab assignment.
+**Why this priority**: Directly demonstrates the Requirement Understanding and Ambiguity Normalization capabilities required by enterprise SDLC governance standards.
 
 **Independent Testability**: Can be tested by executing the Ambiguous scenario in the Orchestrator CLI, which inputs a vague prompt (`"Let users pick custom names, track clicks, and prevent spam"`), flags the missing edge cases, displays the normalized rules, and halts for human approval.
 
@@ -109,7 +109,7 @@ In accordance with GitHub Spec Kit's `/speckit.clarify` phase and Principle 3 of
 *I want a standalone, runnable C# console application that coordinates the entire SDLC across Greenfield, Brownfield, and Ambiguous scenarios with explicit human approval gates and self-correcting bounded retries,*  
 *So that I can evaluate autonomous multi-agent development under controlled enterprise governance, and reuse the CLI across future repositories in my workspace.*
 
-**Why this priority**: This is the central architectural deliverable and primary differentiator of the Charles Schwab assignment.
+**Why this priority**: This is the central architectural deliverable and primary differentiator of the Agentic Software Engineering System.
 
 **Independent Testability**: Can be tested by running `dotnet run --project src/Orchestrator.Cli`, stepping through the interactive terminal menu, executing scenarios, exercising approval gates (`[A]pprove / [R]eject / [S]afe-stop`), triggering simulated test failures to verify bounded retries/rollback, and reviewing the generated telemetry report.
 
@@ -127,7 +127,7 @@ In accordance with GitHub Spec Kit's `/speckit.clarify` phase and Principle 3 of
    **When** all tasks are finalized,  
    **Then** the orchestrator displays a comprehensive Telemetry & Audit Report including Task Success Rate, Retry/Rollback Frequency, Mean Time to Recovery (MTTR), and End-to-End Latency.
 5. **Given** a user invokes the CLI with reusable flags (e.g., `--init --workspace <path>` or `--verify`),  
-   **When** executed against an external repository in `source/repos/`,  
+   **When** executed against an external repository in the local workspace,  
    **Then** the orchestrator scaffolds the standard `specs/` directory (`constitution.md`, `spec.md`, `plan.md`, `tasks.md`) or runs pre-push verification gates independently of the URL Shortener domain.
 6. **Given** an executing workflow where the human engineer selects `[R]eject` at a checkpoint or modifies an upstream specification/requirement mid-run,  
    **When** the upstream change is submitted,  
@@ -231,7 +231,7 @@ info:
 servers:
   - url: https://localhost:7001
     description: Local development environment
-  - url: https://shortener.schwab.com
+  - url: https://shortener.enterprise-finance.example.com
     description: Production environment
 
 paths:
@@ -356,7 +356,7 @@ paths:
               description: Target destination URL
               schema:
                 type: string
-                example: https://www.schwab.com/tax-guide-2026
+                example: https://www.enterprise-finance.example.com/tax-guide-2026
             Cache-Control:
               schema:
                 type: string
@@ -413,7 +413,7 @@ components:
           type: string
           format: uri
           maxLength: 2048
-          example: https://www.schwab.com/retirement-planning
+          example: https://www.enterprise-finance.example.com/retirement-planning
         customAlias:
           type: [string, "null"]
           minLength: 4
@@ -440,11 +440,11 @@ components:
         shortUrl:
           type: string
           format: uri
-          example: https://schwab.co/aB3x9Q1
+          example: https://go.enterprise-finance.example.com/aB3x9Q1
         originalUrl:
           type: string
           format: uri
-          example: https://www.schwab.com/retirement-planning
+          example: https://www.enterprise-finance.example.com/retirement-planning
         createdAt:
           type: string
           format: date-time
@@ -473,7 +473,7 @@ components:
         originalUrl:
           type: string
           format: uri
-          example: https://www.schwab.com/retirement-planning
+          example: https://www.enterprise-finance.example.com/retirement-planning
         totalClicks:
           type: integer
           format: int64
