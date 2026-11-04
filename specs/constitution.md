@@ -46,8 +46,8 @@ This project is governed by a **Two-Tiered Constitutional Architecture**:
 ### Domain Rule 6: Reusable & Domain-Agnostic Orchestration Engine (`Orchestrator.Cli`)
 * **Decoupled Architecture**: The core orchestration state machine, human approval gates (`[A]pprove / [R]eject / [S]afe-stop`), pre-execution Git snapshot/rollback manager, bounded retry runner ($\le 3$ attempts on `dotnet build`/`dotnet test` failures), and telemetry logger must be decoupled from the URL Shortener domain via clean abstractions and dependency injection.
 * **Dual Purpose (Evaluation + Permanent Reusability)**:
-  * **Default Mode**: When executed with default arguments (`dotnet run --project src/Orchestrator.Cli`), runs the Charles Schwab evaluation scenarios out of the box with zero external dependencies.
-  * **Portable Tooling Mode**: The CLI must support reusable commands and flags (such as `--workspace <path>`, `--init`, and `--verify`) allowing Vicky to reuse the orchestrator across any greenfield or brownfield software repository in `source/repos/` and future boutique consultancy client projects.
+  * **Default Mode**: When executed with default arguments (`dotnet run --project src/Orchestrator.Cli`), runs the three required SDLC evaluation scenarios (Greenfield, Brownfield, Ambiguous) out of the box with zero external dependencies.
+  * **Portable Tooling Mode**: The CLI must support reusable commands and flags (such as `--workspace <path>`, `--init`, and `--verify`) allowing engineers to reuse the orchestrator across any greenfield or brownfield software repository and enterprise modernization workflow.
 
 ---
 
