@@ -18,7 +18,7 @@ This implementation plan translates the Gate 1 approved specification ([`specs/s
 
 | Dimension | Selected Technology / Standard | Architectural Justification |
 | :--- | :--- | :--- |
-| **Language & Runtime** | C# 13 / .NET 9.0 (compatible with .NET 8.0+) with `<Nullable>enable</Nullable>` and `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` | Enforces compile-time null safety, immutable `record` DTOs, high-performance native async I/O, and zero-warning build hygiene. |
+| **Language & Runtime** | C# 14 / .NET 10.0 (LTS, supported through November 2028) with `<Nullable>enable</Nullable>` and `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` | Enforces compile-time null safety, immutable `record` DTOs, high-performance native async I/O, and zero-warning build hygiene. |
 | **Web Framework** | ASP.NET Core Minimal APIs | Low-ceremony, high-throughput routing with native endpoint filters, OpenAPI 3.1 metadata support, and built-in dependency injection. |
 | **Caching & Concurrency** | `Microsoft.Extensions.Caching.Memory` (`IMemoryCache`) + `System.Threading.Channels.Channel<T>` | Achieves sub-50ms p99 redirect latency on read paths while decoupling analytics database writes onto a non-blocking background consumer (`IHostedService`). |
 | **Persistence** | Entity Framework Core (`Sqlite` / `InMemory` configurable provider) | Zero external container/cloud setup friction for reviewers out of the box (`dotnet test` / `dotnet run`), while enforcing parameterized queries and `.AsNoTracking()` read hygiene. |
