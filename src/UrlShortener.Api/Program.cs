@@ -1,9 +1,48 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using UrlShortener.Api.Endpoints;
+using UrlShortener.Api.Infrastructure.Data;
+using UrlShortener.Api.Infrastructure.Middleware;
+using UrlShortener.Api.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// OpenAPI 3.1 document generation (contract defined in specs/spec.md).
+// ProblemDetails & Global Exception Handling (RFC 7807)
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalProblemDetailsExceptionHandler>();
+
+// Bounded in-memory cache to prevent memory exhaustion
+builder.Services.AddMemoryCache(options =>
+{
+    options.SizeLimit = 50_000;
+    options.CompactionPercentage = 0.20;
+});
+
+// SQLite Persistence
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Data Source=urlshortener.db";
+builder.Services.AddDbContext<UrlShortenerDbContext>(options =>
+    options.UseSqlite(connectionString));
+
+// Domain & Application Services
+builder.Services.AddScoped<IUrlRepository, EfUrlRepository>();
+builder.Services.AddSingleton<IShortCodeGenerator, Base58CodeGenerator>();
+builder.Services.AddSingleton<IUrlSecurityValidator, UrlSecurityValidator>();
+builder.Services.AddScoped<IUrlShortenerService, UrlShortenerService>();
+
+// OpenAPI 3.1 document generation
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Ensure SQLite database schema exists on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<UrlShortenerDbContext>();
+    dbContext.Database.EnsureCreated();
+}
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
@@ -12,7 +51,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Endpoints are added in Phase 3 (T010–T016) per specs/tasks.md.
+// Register Greenfield Minimal API routes (T013)
+app.MapUrlEndpoints();
 
 app.Run();
 
