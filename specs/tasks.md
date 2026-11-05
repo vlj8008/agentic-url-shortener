@@ -81,11 +81,11 @@ flowchart TD
 **Purpose**: Core building blocks that must complete before user story tracks diverge in parallel.  
 **Entry Gate**: Synchronization Barrier 1 passed.
 
-- [ ] **T005** `[P]` Create domain entities `src/UrlShortener.Api/Domain/Entities/ShortUrl.cs` and `src/UrlShortener.Api/Domain/Entities/ClickEvent.cs` with concurrency tokens and indexed `ShortCode`.
-- [ ] **T006** `[P]` Create immutable C# `record` DTOs in `src/UrlShortener.Api/Domain/Contracts/` (`CreateShortUrlRequest.cs`, `ShortUrlResponse.cs`, `UrlMetadataResponse.cs`) strictly decoupled from database entities (OWASP API3 Anti-Mass Assignment).
-- [ ] **T007** `[P]` Implement `src/UrlShortener.Api/Infrastructure/Middleware/GlobalProblemDetailsExceptionHandler.cs` enforcing RFC 7807 `ProblemDetails` responses with correlation `traceId` on all unhandled errors.
-- [ ] **T008** Implement `src/UrlShortener.Api/Infrastructure/Data/UrlShortenerDbContext.cs`, `IUrlRepository.cs`, and `EfUrlRepository.cs` using parameterized queries and `.AsNoTracking()` for read queries (depends on `T005`).
-- [ ] **T009** Define SOLID domain service abstractions in `src/UrlShortener.Api/Services/` (`IBase62CodeGenerator.cs`, `IUrlSecurityValidator.cs`, `IIpPrivacyHasher.cs`, `IUrlShortenerService.cs`) (depends on `T005`, `T006`).
+- [x] **T005** `[P]` Create domain entities `src/UrlShortener.Api/Domain/Entities/ShortUrl.cs` and `src/UrlShortener.Api/Domain/Entities/ClickEvent.cs` with concurrency tokens and indexed `ShortCode`.
+- [x] **T006** `[P]` Create immutable C# `record` DTOs in `src/UrlShortener.Api/Domain/Contracts/` (`CreateShortUrlRequest.cs`, `ShortUrlResponse.cs`, `UrlMetadataResponse.cs`) strictly decoupled from database entities (OWASP API3 Anti-Mass Assignment).
+- [x] **T007** `[P]` Implement `src/UrlShortener.Api/Infrastructure/Middleware/GlobalProblemDetailsExceptionHandler.cs` enforcing RFC 7807 `ProblemDetails` responses with correlation `traceId` on all unhandled errors.
+- [x] **T008** Implement `src/UrlShortener.Api/Infrastructure/Data/UrlShortenerDbContext.cs`, `IUrlRepository.cs`, and `EfUrlRepository.cs` using parameterized queries and `.AsNoTracking()` for read queries (depends on `T005`).
+- [x] **T009** Define SOLID domain service abstractions in `src/UrlShortener.Api/Services/` (`IBase62CodeGenerator.cs`, `IUrlSecurityValidator.cs`, `IIpPrivacyHasher.cs`, `IUrlShortenerService.cs`) (depends on `T005`, `T006`).
 
 **🚦 Exit Gate (Synchronization Barrier 2)**: Foundation compiles cleanly; parallel tracks (`US1` and `US4`) are unblocked.
 
