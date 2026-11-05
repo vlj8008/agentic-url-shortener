@@ -103,7 +103,7 @@ flowchart TD
 - [x] **T013** `[US1]` Implement Greenfield Minimal API routes in `src/UrlShortener.Api/Endpoints/UrlEndpoints.cs` (`POST /api/v1/urls` returning `201 Created` with `Location`, `GET /{shortCode}` returning `302 Found` with `Cache-Control: no-store, no-cache`, and `GET /health` returning `200 OK`) (depends on `T012`).
 
 ### Automated Tests for User Story 1
-- [ ] **T014** `[P]` `[US1]` Write unit tests in `tests/UrlShortener.UnitTests/Base62AndValidationTests.cs` verifying 7-char Base62 distribution, collision retry exhaustion (`503`), and boundary validation.
+- [x] **T014** `[P]` `[US1]` Write unit tests in `tests/UrlShortener.UnitTests/Base62AndValidationTests.cs` verifying 7-char Base62 distribution, collision retry exhaustion (`503`), and boundary validation.
 - [ ] **T015** `[P]` `[US1]` Write OpenAPI contract tests in `tests/UrlShortener.ContractTests/GreenfieldContractTests.cs` verifying `201 Created`, `302 Found` (`no-store`), `404 Not Found`, and `/health` payload schemas.
 - [ ] **T016** `[P]` `[US1]` Write Anti-SSRF security tests in `tests/UrlShortener.SecurityTests/SsrfAndSchemeSecurityTests.cs` verifying 100% rejection of loopback, RFC 1918, `169.254.169.254`, `javascript:`, and `file:` URIs.
 
