@@ -100,7 +100,7 @@ flowchart TD
 - [x] **T010** `[P]` `[US1]` Implement `src/UrlShortener.Api/Services/Base62CodeGenerator.cs` using `System.Security.Cryptography.RandomNumberGenerator` to generate 7-character `[0-9a-zA-Z]` codes.
 - [x] **T011** `[P]` `[US1]` Implement `src/UrlShortener.Api/Services/UrlSecurityValidator.cs` enforcing `https://` scheme whitelist, 2,048-char limit, self-loop rejection, and Anti-SSRF blocking of loopback (`127.0.0.0/8`, `::1`, `localhost`), RFC 1918 private IPs (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), and cloud metadata (`169.254.169.254`).
 - [x] **T012** `[US1]` Implement core shortening and cached resolution in `src/UrlShortener.Api/Services/UrlShortenerService.cs` with `IMemoryCache` hot lookup and bounded 3-attempt collision retry (`503 Service Unavailable` on exhaustion) (depends on `T008`, `T010`, `T011`).
-- [ ] **T013** `[US1]` Implement Greenfield Minimal API routes in `src/UrlShortener.Api/Endpoints/UrlEndpoints.cs` (`POST /api/v1/urls` returning `201 Created` with `Location`, `GET /{shortCode}` returning `302 Found` with `Cache-Control: no-store, no-cache`, and `GET /health` returning `200 OK`) (depends on `T012`).
+- [x] **T013** `[US1]` Implement Greenfield Minimal API routes in `src/UrlShortener.Api/Endpoints/UrlEndpoints.cs` (`POST /api/v1/urls` returning `201 Created` with `Location`, `GET /{shortCode}` returning `302 Found` with `Cache-Control: no-store, no-cache`, and `GET /health` returning `200 OK`) (depends on `T012`).
 
 ### Automated Tests for User Story 1
 - [ ] **T014** `[P]` `[US1]` Write unit tests in `tests/UrlShortener.UnitTests/Base62AndValidationTests.cs` verifying 7-char Base62 distribution, collision retry exhaustion (`503`), and boundary validation.
