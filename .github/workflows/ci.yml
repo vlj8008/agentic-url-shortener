@@ -46,6 +46,9 @@ jobs:
             exit 0
           fi
 
+          echo "🗄️ Pre-warming SQL Server LocalDB service..."
+          sqllocaldb start mssqllocaldb || true
+
           echo "📦 Restoring NuGet dependencies..."
           dotnet restore
 

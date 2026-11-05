@@ -71,10 +71,11 @@ public class GreenfieldContractTests : IClassFixture<WebApplicationFactory<Progr
     [Fact]
     public async Task PostUrls_WithCustomSlug_Returns201Created_AndCustomShortCode()
     {
+        var customSlug = $"tax-{Guid.NewGuid():N}"[..12];
         var request = new CreateShortUrlRequest
         {
             OriginalUrl = "https://93.184.216.34/tax-strategies-2026",
-            CustomSlug = "tax-plan-2026"
+            CustomSlug = customSlug
         };
 
         var response = await _client.PostAsJsonAsync("/api/v1/urls", request);
@@ -82,17 +83,18 @@ public class GreenfieldContractTests : IClassFixture<WebApplicationFactory<Progr
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<ShortUrlResponse>();
         Assert.NotNull(body);
-        Assert.Equal("tax-plan-2026", body.ShortCode);
-        Assert.Equal("/api/v1/urls/tax-plan-2026", response.Headers.Location?.ToString());
+        Assert.Equal(customSlug, body.ShortCode);
+        Assert.Equal($"/api/v1/urls/{customSlug}", response.Headers.Location?.ToString());
     }
 
     [Fact]
     public async Task PostUrls_DuplicateCustomSlug_Returns409Conflict_WithProblemDetails()
     {
+        var customSlug = $"dup-{Guid.NewGuid():N}"[..12];
         var request = new CreateShortUrlRequest
         {
             OriginalUrl = "https://93.184.216.34/duplicate-test",
-            CustomSlug = "unique-slug-conflict"
+            CustomSlug = customSlug
         };
 
         // First creation succeeds
@@ -108,7 +110,7 @@ public class GreenfieldContractTests : IClassFixture<WebApplicationFactory<Progr
         Assert.NotNull(problemDetails);
         Assert.Equal(409, problemDetails.Status);
         Assert.Equal("Conflict", problemDetails.Title);
-        Assert.Contains("unique-slug-conflict", problemDetails.Detail);
+        Assert.Contains(customSlug, problemDetails.Detail);
     }
 
     [Fact]

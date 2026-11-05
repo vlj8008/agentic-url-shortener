@@ -16,6 +16,8 @@ namespace UrlShortener.SecurityTests;
 public class SsrfAndSchemeSecurityTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private const string ShortenerDomain = "shortener.enterprise-finance.example.com";
+    private const string TestConnectionString =
+        "Server=(localdb)\\mssqllocaldb;Database=UrlShortener_SecurityTests;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
     private readonly HttpClient _apiClient;
 
     public SsrfAndSchemeSecurityTests(WebApplicationFactory<Program> factory)
@@ -27,7 +29,8 @@ public class SsrfAndSchemeSecurityTests : IClassFixture<WebApplicationFactory<Pr
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["Shortener:Domain"] = ShortenerDomain,
-                    ["Shortener:BaseUrl"] = $"https://{ShortenerDomain}"
+                    ["Shortener:BaseUrl"] = $"https://{ShortenerDomain}",
+                    ["ConnectionStrings:DefaultConnection"] = TestConnectionString
                 });
             });
         }).CreateClient();

@@ -39,13 +39,24 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<UrlShortenerDbContext>();
-    try
+    var retryCount = 0;
+    while (true)
     {
-        dbContext.Database.EnsureCreated();
-    }
-    catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801)
-    {
-        // Safe concurrent initialization: database was already created by another test worker/thread
+        try
+        {
+            dbContext.Database.EnsureCreated();
+            break;
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801)
+        {
+            // Safe concurrent initialization: database was already created by another test worker/thread
+            break;
+        }
+        catch (Microsoft.Data.SqlClient.SqlException) when (retryCount < 3)
+        {
+            retryCount++;
+            System.Threading.Thread.Sleep(500);
+        }
     }
 }
 
