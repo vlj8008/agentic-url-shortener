@@ -97,7 +97,7 @@ flowchart TD
 **Entry Gate**: Synchronization Barrier 2 passed.
 
 ### Implementation for User Story 1
-- [ ] **T010** `[P]` `[US1]` Implement `src/UrlShortener.Api/Services/Base62CodeGenerator.cs` using `System.Security.Cryptography.RandomNumberGenerator` to generate 7-character `[0-9a-zA-Z]` codes.
+- [x] **T010** `[P]` `[US1]` Implement `src/UrlShortener.Api/Services/Base62CodeGenerator.cs` using `System.Security.Cryptography.RandomNumberGenerator` to generate 7-character `[0-9a-zA-Z]` codes.
 - [ ] **T011** `[P]` `[US1]` Implement `src/UrlShortener.Api/Services/UrlSecurityValidator.cs` enforcing `https://` scheme whitelist, 2,048-char limit, self-loop rejection, and Anti-SSRF blocking of loopback (`127.0.0.0/8`, `::1`, `localhost`), RFC 1918 private IPs (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), and cloud metadata (`169.254.169.254`).
 - [ ] **T012** `[US1]` Implement core shortening and cached resolution in `src/UrlShortener.Api/Services/UrlShortenerService.cs` with `IMemoryCache` hot lookup and bounded 3-attempt collision retry (`503 Service Unavailable` on exhaustion) (depends on `T008`, `T010`, `T011`).
 - [ ] **T013** `[US1]` Implement Greenfield Minimal API routes in `src/UrlShortener.Api/Endpoints/UrlEndpoints.cs` (`POST /api/v1/urls` returning `201 Created` with `Location`, `GET /{shortCode}` returning `302 Found` with `Cache-Control: no-store, no-cache`, and `GET /health` returning `200 OK`) (depends on `T012`).
