@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -11,29 +12,41 @@ using UrlShortener.Api.Services;
 namespace UrlShortener.SecurityTests;
 
 /// <summary>
-/// Security test suite enforcing 100% rejection of Anti-SSRF and dangerous scheme vectors (specs/tasks.md T016 & SC-005).
+/// Isolated test host fixture for SSRF and scheme security tests.
+/// Boots the API once in the "Testing" environment using an in-memory database.
 /// </summary>
-public class SsrfAndSchemeSecurityTests : IClassFixture<WebApplicationFactory<Program>>
+public class SecurityTestWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private const string ShortenerDomain = "shortener.enterprise-finance.example.com";
-    private const string TestConnectionString =
-        "Server=(localdb)\\mssqllocaldb;Database=UrlShortener_SecurityTests;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+    public const string ShortenerDomain = "shortener.enterprise-finance.example.com";
+    private readonly string _testDbName = $"SecurityTestsDb_{Guid.NewGuid():N}";
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
+
+        builder.ConfigureAppConfiguration((_, config) =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Shortener:Domain"] = ShortenerDomain,
+                ["Shortener:BaseUrl"] = $"https://{ShortenerDomain}",
+                ["TestDatabaseName"] = _testDbName
+            });
+        });
+    }
+}
+
+/// <summary>
+/// Security test suite enforcing 100% rejection of Anti-SSRF and dangerous scheme vectors (specs/tasks.md T016 and SC-005).
+/// </summary>
+public class SsrfAndSchemeSecurityTests : IClassFixture<SecurityTestWebApplicationFactory>, IDisposable
+{
+    private const string ShortenerDomain = SecurityTestWebApplicationFactory.ShortenerDomain;
     private readonly HttpClient _apiClient;
 
-    public SsrfAndSchemeSecurityTests(WebApplicationFactory<Program> factory)
+    public SsrfAndSchemeSecurityTests(SecurityTestWebApplicationFactory factory)
     {
-        _apiClient = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-            {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["Shortener:Domain"] = ShortenerDomain,
-                    ["Shortener:BaseUrl"] = $"https://{ShortenerDomain}",
-                    ["ConnectionStrings:DefaultConnection"] = TestConnectionString
-                });
-            });
-        }).CreateClient();
+        _apiClient = factory.CreateClient();
     }
 
     // =========================================================================
@@ -225,5 +238,10 @@ public class SsrfAndSchemeSecurityTests : IClassFixture<WebApplicationFactory<Pr
         public string ApplicationName { get; set; } = "UrlShortener.SecurityTests";
         public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
+
+    public void Dispose()
+    {
+        _apiClient.Dispose();
     }
 }
