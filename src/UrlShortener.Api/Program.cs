@@ -39,6 +39,7 @@ else
 builder.Services.AddScoped<IUrlRepository, EfUrlRepository>();
 builder.Services.AddSingleton<IShortCodeGenerator, Base58CodeGenerator>();
 builder.Services.AddSingleton<IUrlSecurityValidator, UrlSecurityValidator>();
+builder.Services.AddSingleton<IIpPrivacyHasher, IpPrivacyHasher>();
 builder.Services.AddScoped<IUrlShortenerService, UrlShortenerService>();
 
 // OpenAPI 3.1 document generation
