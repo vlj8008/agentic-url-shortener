@@ -1,0 +1,13 @@
+<Project>
+  <!--
+    Shared build settings inherited by every project in this repository.
+    Governed by specs/plan.md (Technology Stack) and tasks.md T001.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
