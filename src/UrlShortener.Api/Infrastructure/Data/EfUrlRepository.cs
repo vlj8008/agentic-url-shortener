@@ -33,8 +33,16 @@ public sealed class EfUrlRepository : IUrlRepository
 
     public async Task AddAsync(ShortUrl shortUrl, CancellationToken cancellationToken = default)
     {
-        await _dbContext.ShortUrls.AddAsync(shortUrl, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.ShortUrls.AddAsync(shortUrl, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            _dbContext.ChangeTracker.Clear();
+            throw;
+        }
     }
 
     public async Task UpdateAsync(ShortUrl shortUrl, CancellationToken cancellationToken = default)
