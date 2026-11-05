@@ -15,7 +15,7 @@ namespace UrlShortener.ContractTests;
 /// OpenAPI contract tests for Greenfield MVP endpoints (specs/tasks.md T015).
 /// Verifies HTTP status codes, headers, and payload schemas against specs/spec.md.
 /// </summary>
-public class GreenfieldContractTests : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
+public class GreenfieldContractTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
 {
     private const string TestConnectionString =
         "Server=(localdb)\\mssqllocaldb;Database=UrlShortener_ContractTests;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
@@ -40,21 +40,6 @@ public class GreenfieldContractTests : IClassFixture<WebApplicationFactory<Progr
         {
             AllowAutoRedirect = false
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<UrlShortenerDbContext>();
-        await db.Database.EnsureCreatedAsync();
-    }
-
-    public async Task DisposeAsync()
-    {
-        _client.Dispose();
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<UrlShortenerDbContext>();
-        await db.Database.EnsureDeletedAsync();
     }
 
     [Fact]
@@ -195,5 +180,10 @@ public class GreenfieldContractTests : IClassFixture<WebApplicationFactory<Progr
         var payload = await response.Content.ReadFromJsonAsync<HealthStatusResponse>();
         Assert.NotNull(payload);
         Assert.Equal("Healthy", payload.Status);
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
     }
 }

@@ -105,7 +105,7 @@ flowchart TD
 ### Automated Tests for User Story 1
 - [x] **T014** `[P]` `[US1]` Write unit tests in `tests/UrlShortener.UnitTests/Base62AndValidationTests.cs` verifying 7-char Base62 distribution, collision retry exhaustion (`503`), and boundary validation.
 - [x] **T015** `[P]` `[US1]` Write OpenAPI contract tests in `tests/UrlShortener.ContractTests/GreenfieldContractTests.cs` verifying `201 Created`, `302 Found` (`no-store`), `404 Not Found`, and `/health` payload schemas.
-- [ ] **T016** `[P]` `[US1]` Write Anti-SSRF security tests in `tests/UrlShortener.SecurityTests/SsrfAndSchemeSecurityTests.cs` verifying 100% rejection of loopback, RFC 1918, `169.254.169.254`, `javascript:`, and `file:` URIs.
+- [x] **T016** `[P]` `[US1]` Write Anti-SSRF security tests in `tests/UrlShortener.SecurityTests/SsrfAndSchemeSecurityTests.cs` verifying 100% rejection of loopback, RFC 1918, `169.254.169.254`, `javascript:`, and `file:` URIs.
 
 **🚦 Exit Gate**: User Story 1 (Greenfield MVP) builds and passes all unit, contract, and SSRF security tests independently.
 

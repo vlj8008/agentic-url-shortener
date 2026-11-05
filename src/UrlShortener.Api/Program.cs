@@ -35,11 +35,18 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Ensure SQL Server database schema exists on startup
+// Ensure SQL Server database schema exists on startup with concurrency resiliency
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<UrlShortenerDbContext>();
-    dbContext.Database.EnsureCreated();
+    try
+    {
+        dbContext.Database.EnsureCreated();
+    }
+    catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801)
+    {
+        // Safe concurrent initialization: database was already created by another test worker/thread
+    }
 }
 
 app.UseExceptionHandler();
