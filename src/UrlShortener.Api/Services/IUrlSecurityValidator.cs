@@ -1,12 +1,30 @@
+using System.Net;
+
 namespace UrlShortener.Api.Services;
 
 /// <summary>
-/// Encapsulates the outcome of destination URL security validation.
+/// Represents the result of a URL security validation, including the resolved IP 
+/// to prevent Time-of-Check to Time-of-Use (TOCTOU) DNS Rebinding attacks.
 /// </summary>
-public sealed record UrlValidationResult(bool IsValid, string? ErrorMessage = null)
+public sealed class UrlValidationResult
 {
-    public static UrlValidationResult Success() => new(true);
-    public static UrlValidationResult Failure(string message) => new(false, message);
+    public bool IsValid { get; }
+    public string? ErrorMessage { get; }
+    
+    /// <summary>
+    /// Captured safe IP address to be used by downstream HTTP clients (anti-TOCTOU).
+    /// </summary>
+    public IPAddress? ResolvedSafeIp { get; } 
+
+    private UrlValidationResult(bool isValid, string? errorMessage, IPAddress? resolvedSafeIp)
+    {
+        IsValid = isValid;
+        ErrorMessage = errorMessage;
+        ResolvedSafeIp = resolvedSafeIp;
+    }
+
+    public static UrlValidationResult Success(IPAddress? resolvedIp = null) => new(true, null, resolvedIp);
+    public static UrlValidationResult Failure(string errorMessage) => new(false, errorMessage, null);
 }
 
 /// <summary>
