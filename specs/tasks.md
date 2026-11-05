@@ -118,7 +118,7 @@ flowchart TD
 
 ### Implementation for User Story 2
 - [x] **T017** `[P]` `[US2]` Implement `src/UrlShortener.Api/Services/IpPrivacyHasher.cs` computing salted SHA-256 hex digests so raw client IP addresses are never stored in plain text.
-- [ ] **T018** `[P]` `[US2]` Implement `src/UrlShortener.Api/Infrastructure/Analytics/ClickAnalyticsBackgroundService.cs` consuming from a singleton bounded `Channel<ClickEvent>` and persisting analytics asynchronously in the background.
+- [x] **T018** `[P]` `[US2]` Implement `src/UrlShortener.Api/Infrastructure/Analytics/ClickAnalyticsBackgroundService.cs` consuming from a singleton bounded `Channel<ClickEvent>` and persisting analytics asynchronously in the background.
 - [ ] **T019** `[US2]` Extend `UrlShortenerService.cs` and `UrlEndpoints.cs` to publish non-blocking `ClickEvent` messages on redirect, serve `GET /api/v1/urls/{shortCode}` (`200 OK` metadata & unique visitor counts), and handle `DELETE /api/v1/urls/{shortCode}` (`204 No Content` soft revocation + cache invalidation, causing subsequent redirects to return `410 Gone`) (depends on `T017`, `T018`).
 
 ### Automated Tests for User Story 2

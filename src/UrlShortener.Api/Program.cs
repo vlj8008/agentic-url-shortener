@@ -1,6 +1,9 @@
+using System.Threading.Channels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using UrlShortener.Api.Domain.Entities;
 using UrlShortener.Api.Endpoints;
+using UrlShortener.Api.Infrastructure.Analytics;
 using UrlShortener.Api.Infrastructure.Data;
 using UrlShortener.Api.Infrastructure.Middleware;
 using UrlShortener.Api.Services;
@@ -41,6 +44,17 @@ builder.Services.AddSingleton<IShortCodeGenerator, Base58CodeGenerator>();
 builder.Services.AddSingleton<IUrlSecurityValidator, UrlSecurityValidator>();
 builder.Services.AddSingleton<IIpPrivacyHasher, IpPrivacyHasher>();
 builder.Services.AddScoped<IUrlShortenerService, UrlShortenerService>();
+
+// Non-blocking bounded channel & background worker for async click telemetry (T018)
+builder.Services.AddSingleton(Channel.CreateBounded<ClickEvent>(new BoundedChannelOptions(10_000)
+{
+    FullMode = BoundedChannelFullMode.DropOldest,
+    SingleReader = true,
+    SingleWriter = false
+}));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<Channel<ClickEvent>>().Reader);
+builder.Services.AddSingleton(sp => sp.GetRequiredService<Channel<ClickEvent>>().Writer);
+builder.Services.AddHostedService<ClickAnalyticsBackgroundService>();
 
 // OpenAPI 3.1 document generation
 builder.Services.AddOpenApi();
