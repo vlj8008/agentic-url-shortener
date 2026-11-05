@@ -18,11 +18,22 @@ builder.Services.AddMemoryCache(options =>
     options.CompactionPercentage = 0.20;
 });
 
-// SQL Server Persistence (LocalDB in Development, Enterprise SQL Server in Production)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=(localdb)\\mssqllocaldb;Database=UrlShortenerDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
-builder.Services.AddDbContext<UrlShortenerDbContext>(options =>
-    options.UseSqlServer(connectionString));
+// Database Persistence:
+// - In "Testing" environment (T002/T015/T016), use isolated EF Core InMemory database
+// - In Development/Production, use SQL Server
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    var testDbName = builder.Configuration["TestDatabaseName"] ?? "UrlShortener_DefaultTestDb";
+    builder.Services.AddDbContext<UrlShortenerDbContext>(options =>
+        options.UseInMemoryDatabase(testDbName));
+}
+else
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Server=(localdb)\\mssqllocaldb;Database=UrlShortenerDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+    builder.Services.AddDbContext<UrlShortenerDbContext>(options =>
+        options.UseSqlServer(connectionString));
+}
 
 // Domain & Application Services
 builder.Services.AddScoped<IUrlRepository, EfUrlRepository>();
@@ -35,11 +46,36 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Ensure SQL Server database schema exists on startup
+// Ensure database schema exists on startup
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<UrlShortenerDbContext>();
-    dbContext.Database.EnsureCreated();
+    if (!dbContext.Database.IsRelational())
+    {
+        dbContext.Database.EnsureCreated();
+    }
+    else
+    {
+        var retryCount = 0;
+        while (true)
+        {
+            try
+            {
+                dbContext.Database.EnsureCreated();
+                break;
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801)
+            {
+                // Safe concurrent initialization: database was already created
+                break;
+            }
+            catch (Microsoft.Data.SqlClient.SqlException) when (retryCount < 3)
+            {
+                retryCount++;
+                System.Threading.Thread.Sleep(500);
+            }
+        }
+    }
 }
 
 app.UseExceptionHandler();
