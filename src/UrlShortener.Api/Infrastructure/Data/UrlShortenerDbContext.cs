@@ -4,7 +4,7 @@ using UrlShortener.Api.Domain.Entities;
 namespace UrlShortener.Api.Infrastructure.Data;
 
 /// <summary>
-/// Entity Framework Core database context configured for SQLite and InMemory providers.
+/// Entity Framework Core database context configured for SQL Server (and InMemory providers for unit testing).
 /// </summary>
 public class UrlShortenerDbContext : DbContext
 {

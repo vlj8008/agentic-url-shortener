@@ -18,11 +18,11 @@ builder.Services.AddMemoryCache(options =>
     options.CompactionPercentage = 0.20;
 });
 
-// SQLite Persistence
+// SQL Server Persistence (LocalDB in Development, Enterprise SQL Server in Production)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Data Source=urlshortener.db";
+    ?? "Server=(localdb)\\mssqllocaldb;Database=UrlShortenerDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 builder.Services.AddDbContext<UrlShortenerDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseSqlServer(connectionString));
 
 // Domain & Application Services
 builder.Services.AddScoped<IUrlRepository, EfUrlRepository>();
@@ -35,7 +35,7 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Ensure SQLite database schema exists on startup
+// Ensure SQL Server database schema exists on startup
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<UrlShortenerDbContext>();
