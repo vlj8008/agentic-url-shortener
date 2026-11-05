@@ -69,6 +69,7 @@ public sealed class GlobalProblemDetailsExceptionHandler : IExceptionHandler
         };
 
         problemDetails.Extensions["traceId"] = traceId;
+        httpContext.Response.StatusCode = statusCode;
 
         return await _problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {

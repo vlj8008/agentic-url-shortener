@@ -12,7 +12,10 @@ permissions:
 jobs:
   verify-and-test:
     name: Shift-Left Governance & .NET Verification
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout Repository
