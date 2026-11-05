@@ -67,10 +67,10 @@ flowchart TD
 **Purpose**: Initialize the .NET solution, source projects, and test suites with strict compiler and nullability guardrails.  
 **Entry Gate**: Gate 2 (`specs/plan.md` & `specs/tasks.md`) approved by the human engineer.
 
-- [ ] **T001** Create `AgenticUrlShortener.sln` and root `Directory.Build.props` enforcing `<Nullable>enable</Nullable>`, `<ImplicitUsings>enable</ImplicitUsings>`, and `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`.
-- [ ] **T002** `[P]` Initialize web service project `src/UrlShortener.Api/UrlShortener.Api.csproj` with EF Core (`Sqlite`/`InMemory`) and OpenAPI references, plus `public partial class Program { }` for integration test visibility.
-- [ ] **T003** `[P]` Initialize console orchestrator project `src/Orchestrator.Cli/Orchestrator.Cli.csproj` with clean dependency injection and `Microsoft.Extensions.AI` abstraction support.
-- [ ] **T004** `[P]` Initialize the 3 automated test projects (`tests/UrlShortener.UnitTests`, `tests/UrlShortener.ContractTests`, and `tests/UrlShortener.SecurityTests`) referencing `xUnit` and `Microsoft.AspNetCore.Mvc.Testing`.
+- [x] **T001** Create `AgenticUrlShortener.sln` and root `Directory.Build.props` enforcing `<Nullable>enable</Nullable>`, `<ImplicitUsings>enable</ImplicitUsings>`, and `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`.
+- [x] **T002** `[P]` Initialize web service project `src/UrlShortener.Api/UrlShortener.Api.csproj` with EF Core (`Sqlite`/`InMemory`) and OpenAPI references, plus `public partial class Program { }` for integration test visibility.
+- [x] **T003** `[P]` Initialize console orchestrator project `src/Orchestrator.Cli/Orchestrator.Cli.csproj` with clean dependency injection and `Microsoft.Extensions.AI` abstraction support.
+- [x] **T004** `[P]` Initialize the 3 automated test projects (`tests/UrlShortener.UnitTests`, `tests/UrlShortener.ContractTests`, and `tests/UrlShortener.SecurityTests`) referencing `xUnit` and `Microsoft.AspNetCore.Mvc.Testing`.
 
 **🚦 Exit Gate (Synchronization Barrier 1)**: `dotnet build AgenticUrlShortener.sln` succeeds with 0 errors and 0 warnings.
 
