@@ -40,7 +40,7 @@ public sealed class ClickAnalyticsBackgroundService : BackgroundService
             {
                 try
                 {
-                    using var scope = _scopeFactory.CreateScope();
+                    await using var scope = _scopeFactory.CreateAsyncScope();
                     var repository = scope.ServiceProvider.GetRequiredService<IUrlRepository>();
                     await repository.RecordClickAsync(clickEvent, stoppingToken);
                 }
