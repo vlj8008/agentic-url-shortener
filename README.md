@@ -11,6 +11,121 @@ An enterprise-grade **Agentic Software Engineering System** and **Resilient URL 
 
 ---
 
+## 📋 Reviewer Evaluation & Hands-On Testing Guide
+
+> **Zero-Friction Reviewer Onboarding**: This prototype requires only the standard [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0). No external API keys, cloud subscriptions, or Docker containers are required. Everything runs 100% locally.
+
+### 1. Build & Run the 190 Automated Tests (1 Minute)
+```bash
+# Clone the repository
+git clone https://github.com/vlj8008/agentic-url-shortener.git
+cd agentic-url-shortener
+
+# Verify clean compilation (0 warnings, 0 errors under TreatWarningsAsErrors)
+dotnet build AgenticUrlShortener.sln
+
+# Run all 190 automated tests (~2.1 seconds)
+dotnet test AgenticUrlShortener.sln
+```
+* **Expected Result**: `Passed! Failed: 0, Passed: 190, Skipped: 0` across Unit, Contract, and Security test suites.
+
+---
+
+### 2. Test the Live Web API via `curl` (3 Minutes)
+
+In **Terminal 1**, start the live ASP.NET Core Minimal API service:
+```bash
+dotnet run --project src/UrlShortener.Api
+```
+
+In **Terminal 2**, run these copy-paste commands to test security and functional capabilities:
+
+#### A. Health Readiness Probe (`GET /health`)
+```bash
+curl -i http://localhost:5000/health
+```
+* **Expected Response**: `HTTP 200 OK` &rarr; `{"status":"Healthy"}`.
+
+#### B. Create a Shortened Link (`POST /api/v1/urls`)
+```bash
+curl -i -X POST http://localhost:5000/api/v1/urls \
+  -H "Content-Type: application/json" \
+  -d "{\"originalUrl\": \"https://github.com/vlj8008/agentic-url-shortener\"}"
+```
+* **Expected Response**: `HTTP 201 Created` with a 7-character Base62 token (e.g. `"shortCode": "k9X2b1q"`).
+
+#### C. Test Sub-50ms Cached Redirection (`GET /{shortCode}`)
+```bash
+# Replace 'k9X2b1q' with your generated shortCode:
+curl -i http://localhost:5000/k9X2b1q
+```
+* **Expected Response**: `HTTP 302 Found` with `Location: https://github.com/vlj8008/agentic-url-shortener` and `Cache-Control: no-store, no-cache` served in $<50\text{ms}$ from `IMemoryCache`.
+
+#### D. Test Anti-SSRF Perimeter Protection (Security Check)
+Attempt to shorten a forbidden cloud metadata IP or loopback address:
+```bash
+curl -i -X POST http://localhost:5000/api/v1/urls \
+  -H "Content-Type: application/json" \
+  -d "{\"originalUrl\": \"http://169.254.169.254/latest/meta-data/\"}"
+```
+* **Expected Response**: `HTTP 400 Bad Request` with an RFC 7807 `ProblemDetails` error payload rejecting the forbidden IP range.
+
+#### E. Test Rate Limiting Defense (Abuse Mitigation)
+Send 15 requests in a tight loop to trigger rate limiting:
+```bash
+# In PowerShell:
+1..15 | ForEach-Object {
+  curl -s -o /dev/null -w "%{http_code}`n" -X POST http://localhost:5000/api/v1/urls -H "Content-Type: application/json" -d "{\"originalUrl\":\"https://example.com/$_\"}"
+}
+```
+* **Expected Response**: Requests 1–10 succeed (`201`); requests 11+ return **`HTTP 429 Too Many Requests`** with a `Retry-After: 60` response header.
+
+#### F. Test Privacy-Safe Click Analytics (`GET /api/v1/urls/{shortCode}`)
+```bash
+curl -i http://localhost:5000/api/v1/urls/k9X2b1q
+```
+* **Expected Response**: `HTTP 200 OK` with `totalClicks`, `uniqueVisitors`, and zero raw IP addresses or customer PII exposed (only 64-char HMAC SHA-256 hashes).
+
+#### G. Test Emergency Compliance Revocation (`DELETE /api/v1/urls/{shortCode}`)
+```bash
+curl -i -X DELETE http://localhost:5000/api/v1/urls/k9X2b1q
+```
+* **Expected Response**: `HTTP 204 No Content`.
+* **Now verify the link is immediately deactivated**:
+  ```bash
+  curl -i http://localhost:5000/k9X2b1q
+  ```
+  * **Expected Response**: **`HTTP 410 Gone`** with RFC 7807 `ProblemDetails` stating the link has been revoked.
+
+---
+
+### 3. Evaluate the Agentic SDLC Orchestrator CLI (3 Minutes)
+
+Launch the interactive **Zero-Config Evaluation Menu**:
+```bash
+dotnet run --project src/Orchestrator.Cli
+```
+```text
+===========================================================================
+    ENTERPRISE AGENTIC SDLC ORCHESTRATOR & GOVERNANCE ENGINE
+    Controlled Autonomy | Spec-Driven Development | Non-Linear DAG
+===========================================================================
+  Interactive Zero-Config Evaluation Mode (No Cloud Keys Required):
+
+    [1] Greenfield Scenario   — Core URL Shortener MVP (US1)
+    [2] Brownfield Scenario   — Privacy Analytics & Revocation (US2)
+    [3] Ambiguous Scenario    — Intent Normalization & Dynamic Re-Planning (US3)
+    [4] Workspace Governance  — Scaffold specs/ or Run Pre-Push Verification
+    [5] Exit
+```
+
+#### Key Reviewer Experiments:
+* **Option 1 (Greenfield)**: Walk through Gate 1 (Specification), Gate 2 (5-wave non-linear DAG), and Gate 3 (Release). View the real-time Telemetry Report with MTTR.
+* **Option 3 (Ambiguous & Dynamic Re-Planning)**: Ingests the vague prompt *"Let users pick custom names, track clicks, and prevent spam"*. When prompted at Gate 1, type **`R` (Reject)** to observe the state machine execute **Dynamic Downstream Re-Planning**, route backward, refine boundary contracts, and re-generate a validated DAG!
+* **Option 4 (Workspace Governance)**: Run `--verify` to execute local pre-push verification gates enforcing the **Zero-Broken-Commits Rule**.
+
+---
+
 ## 🏛️ Executive Architecture Overview
 
 The system is composed of two primary modules decoupled by clean architectural boundaries:
@@ -141,116 +256,6 @@ flowchart TD
   - `TelemetryTracker`: **100.0%** line coverage
   - `TaskNode` & `ExecutionWave`: **100.0%** line coverage
   - `SdlcStateMachine`: **77.6%–93.3%** line coverage
-
----
-
-## 📋 Reviewer Evaluation & Hands-On Testing Guide
-
-Designed for **zero-friction reviewer onboarding**, this prototype requires only the standard [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0). No external API keys, paid accounts, or Docker containers are required.
-
-### 1. Build and Run the Test Suites
-```bash
-# Verify clean compilation (0 warnings, 0 errors)
-dotnet build AgenticUrlShortener.sln
-
-# Run all 190 automated tests (~2.1 seconds)
-dotnet test AgenticUrlShortener.sln
-```
-
----
-
-### 2. Test the Live Web API via `curl`
-
-In terminal 1, start the API service:
-```bash
-dotnet run --project src/UrlShortener.Api
-```
-
-In terminal 2, execute the following evaluation tests:
-
-#### A. Health Probe (`GET /health`)
-```bash
-curl -i http://localhost:5000/health
-```
-* **Expected Response**: `HTTP 200 OK` with body `{"status":"Healthy"}`.
-
-#### B. Create a Shortened Link (`POST /api/v1/urls`)
-```bash
-curl -i -X POST http://localhost:5000/api/v1/urls \
-  -H "Content-Type: application/json" \
-  -d "{\"originalUrl\": \"https://github.com/vlj8008/agentic-url-shortener\"}"
-```
-* **Expected Response**: `HTTP 201 Created` with a 7-character Base62 token (e.g. `"shortCode": "k9X2b1q"`).
-
-#### C. Test Sub-50ms Cached Redirection (`GET /{shortCode}`)
-```bash
-# Replace 'k9X2b1q' with your generated shortCode:
-curl -i http://localhost:5000/k9X2b1q
-```
-* **Expected Response**: `HTTP 302 Found` with `Location: https://github.com/vlj8008/agentic-url-shortener` and `Cache-Control: no-store, no-cache` served in $<50\text{ms}$ from `IMemoryCache`.
-
-#### D. Test Anti-SSRF Perimeter Protection (Security Check)
-Attempt to shorten a forbidden cloud metadata IP or loopback address:
-```bash
-curl -i -X POST http://localhost:5000/api/v1/urls \
-  -H "Content-Type: application/json" \
-  -d "{\"originalUrl\": \"http://169.254.169.254/latest/meta-data/\"}"
-```
-* **Expected Response**: `HTTP 400 Bad Request` with an RFC 7807 `ProblemDetails` error payload rejecting the forbidden IP range.
-
-#### E. Test Rate Limiting Defense (Abuse Mitigation)
-Send 15 requests in a tight loop to trigger rate limiting:
-```bash
-# In PowerShell:
-1..15 | ForEach-Object {
-  curl -s -o /dev/null -w "%{http_code}`n" -X POST http://localhost:5000/api/v1/urls -H "Content-Type: application/json" -d "{\"originalUrl\":\"https://example.com/$_\"}"
-}
-```
-* **Expected Response**: Requests 1–10 succeed (`201`); requests 11+ return **`HTTP 429 Too Many Requests`** with a `Retry-After: 60` response header.
-
-#### F. Test Privacy-Safe Analytics (`GET /api/v1/urls/{shortCode}`)
-```bash
-curl -i http://localhost:5000/api/v1/urls/k9X2b1q
-```
-* **Expected Response**: `HTTP 200 OK` with `totalClicks`, `uniqueVisitors`, and zero raw IP addresses or customer PII exposed (only 64-char HMAC SHA-256 hashes).
-
-#### G. Test Emergency Compliance Revocation (`DELETE /api/v1/urls/{shortCode}`)
-```bash
-curl -i -X DELETE http://localhost:5000/api/v1/urls/k9X2b1q
-```
-* **Expected Response**: `HTTP 204 No Content`.
-* **Now verify the link is dead**:
-  ```bash
-  curl -i http://localhost:5000/k9X2b1q
-  ```
-  * **Expected Response**: **`HTTP 410 Gone`** with RFC 7807 `ProblemDetails` stating the link has been revoked.
-
----
-
-### 3. Evaluate the Agentic SDLC Orchestrator CLI
-
-Launch the interactive **Zero-Config Evaluation Menu**:
-```bash
-dotnet run --project src/Orchestrator.Cli
-```
-```text
-===========================================================================
-    ENTERPRISE AGENTIC SDLC ORCHESTRATOR & GOVERNANCE ENGINE
-    Controlled Autonomy | Spec-Driven Development | Non-Linear DAG
-===========================================================================
-  Interactive Zero-Config Evaluation Mode (No Cloud Keys Required):
-
-    [1] Greenfield Scenario   — Core URL Shortener MVP (US1)
-    [2] Brownfield Scenario   — Privacy Analytics & Revocation (US2)
-    [3] Ambiguous Scenario    — Intent Normalization & Dynamic Re-Planning (US3)
-    [4] Workspace Governance  — Scaffold specs/ or Run Pre-Push Verification
-    [5] Exit
-```
-
-#### Reviewer Experiments to Try:
-* **Option 1 (Greenfield)**: Walk through Gate 1 (Specification), Gate 2 (5-wave non-linear DAG), and Gate 3 (Release). View the real-time Telemetry Report with MTTR.
-* **Option 3 (Ambiguous & Dynamic Re-Planning)**: Ingests the vague prompt *"Let users pick custom names, track clicks, and prevent spam"*. When prompted at Gate 1, type **`R` (Reject)** to observe the state machine execute **Dynamic Downstream Re-Planning**, route backward, refine boundary contracts, and re-generate a validated DAG!
-* **Option 4 (Workspace Governance)**: Run `--verify` to execute local pre-push verification gates enforcing the **Zero-Broken-Commits Rule**.
 
 ---
 
