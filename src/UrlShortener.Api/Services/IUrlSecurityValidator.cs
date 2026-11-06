@@ -36,4 +36,11 @@ public interface IUrlSecurityValidator
     /// Asynchronously validates destination URL against scheme, length, Anti-SSRF, and loopback rules.
     /// </summary>
     Task<UrlValidationResult> ValidateAsync(string url, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Validates a custom short code alias against format constraints (^[a-zA-Z0-9_-]{4,32}$) and reserved keyword blocklists (T022).
+    /// </summary>
+    /// <param name="customAlias">The requested custom slug.</param>
+    /// <returns>Validation result indicating success or specific format/keyword rejection reason.</returns>
+    UrlValidationResult ValidateCustomAlias(string? customAlias) => UrlValidationResult.Success();
 }

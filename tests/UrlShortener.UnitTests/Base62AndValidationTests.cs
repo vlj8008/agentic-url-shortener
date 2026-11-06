@@ -280,7 +280,7 @@ public class Base62AndValidationTests
     {
         var repository = new InMemoryTestUrlRepository();
         var generator = new Base58CodeGenerator();
-        var validator = new AlwaysValidSecurityValidator();
+        var validator = CreateValidator(isDevelopment: true);
         var cache = CreateMemoryCache();
         var service = new UrlShortenerService(repository, generator, validator, cache, NullLogger<UrlShortenerService>.Instance);
 
