@@ -1,25 +1,48 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 
 namespace UrlShortener.Api.Services;
 
 /// <summary>
-/// Enforces destination URL validation and Anti-SSRF security policies (specs/tasks.md T011).
-/// Blocks private IPv4/IPv6 networks, cloud metadata endpoints, loopback addresses, and self-loops.
+/// Enforces destination URL validation, Anti-SSRF security policies, and custom alias constraints (specs/tasks.md T011, T022).
+/// Blocks private IPv4/IPv6 networks, cloud metadata endpoints, loopback addresses, self-loops, and reserved keyword aliases.
 /// </summary>
-public sealed class UrlSecurityValidator : IUrlSecurityValidator
+public sealed partial class UrlSecurityValidator : IUrlSecurityValidator
 {
     private const int MaxUrlLength = 2048;
     private const int DefaultDnsTimeoutSeconds = 3;
 
+    private static readonly HashSet<string> ReservedWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "api",
+        "health",
+        "admin",
+        "swagger",
+        "metrics"
+    };
+
+    [GeneratedRegex(@"^[a-zA-Z0-9_-]{4,32}$")]
+    private static partial Regex CustomAliasRegex();
+
     private readonly IHostEnvironment _environment;
     private readonly string? _configuredShortenerDomain;
     private readonly TimeSpan _dnsTimeout;
+
+    /// <summary>
+    /// Parameterless constructor for testing and standalone validation scenarios.
+    /// </summary>
+    public UrlSecurityValidator()
+        : this(new StandaloneHostEnvironment(), new ConfigurationBuilder().Build())
+    {
+    }
 
     public UrlSecurityValidator(IHostEnvironment environment, IConfiguration configuration)
     {
@@ -131,6 +154,71 @@ public sealed class UrlSecurityValidator : IUrlSecurityValidator
     }
 
     /// <summary>
+    /// Validates a custom short code alias against format constraints (^[a-zA-Z0-9_-]{4,32}$) and reserved keyword blocklists (T022).
+    /// </summary>
+    /// <param name="customAlias">The requested custom slug.</param>
+    /// <returns>Validation result indicating success or specific format/keyword rejection reason.</returns>
+    public UrlValidationResult ValidateCustomAlias(string? customAlias)
+    {
+        if (string.IsNullOrWhiteSpace(customAlias))
+        {
+            return UrlValidationResult.Failure("Custom alias cannot be empty.");
+        }
+
+        var trimmed = customAlias.Trim();
+
+        if (ReservedWords.Contains(trimmed))
+        {
+            return UrlValidationResult.Failure($"Custom alias '{trimmed}' is a reserved keyword and cannot be used.");
+        }
+
+        if (trimmed.Length < 4 || trimmed.Length > 32)
+        {
+            return UrlValidationResult.Failure("Custom alias must be between 4 and 32 characters in length.");
+        }
+
+        if (!CustomAliasRegex().IsMatch(trimmed))
+        {
+            return UrlValidationResult.Failure("Custom alias may only contain alphanumeric characters, underscores, and hyphens.");
+        }
+
+        return UrlValidationResult.Success();
+    }
+
+    /// <summary>
+    /// Validates an optional link expiration timestamp ensuring it is in the future (UTC) (specs/tasks.md T022).
+    /// </summary>
+    public UrlValidationResult ValidateExpiration(DateTimeOffset? expiresAt)
+    {
+        if (expiresAt.HasValue && expiresAt.Value <= DateTimeOffset.UtcNow)
+        {
+            return UrlValidationResult.Failure("Expiration timestamp must be in the future (UTC).");
+        }
+
+        return UrlValidationResult.Success();
+    }
+
+    /// <summary>
+    /// Overload for DateTime expiration timestamps ensuring future UTC validity.
+    /// </summary>
+    public UrlValidationResult ValidateExpiration(DateTime? expiresAt)
+    {
+        if (expiresAt.HasValue)
+        {
+            var utcDateTime = expiresAt.Value.Kind == DateTimeKind.Utc
+                ? expiresAt.Value
+                : expiresAt.Value.ToUniversalTime();
+
+            if (utcDateTime <= DateTime.UtcNow)
+            {
+                return UrlValidationResult.Failure("Expiration timestamp must be in the future (UTC).");
+            }
+        }
+
+        return UrlValidationResult.Success();
+    }
+
+    /// <summary>
     /// Checks whether an IP address belongs to loopback, private RFC 1918, link-local, or cloud metadata ranges.
     /// Evaluated using C# list pattern matching for concise, performant byte inspection.
     /// </summary>
@@ -176,5 +264,13 @@ public sealed class UrlSecurityValidator : IUrlSecurityValidator
         }
 
         return false;
+    }
+
+    private sealed class StandaloneHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Development;
+        public string ApplicationName { get; set; } = "UrlShortener.Api";
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }

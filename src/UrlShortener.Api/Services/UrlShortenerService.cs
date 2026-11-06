@@ -111,14 +111,15 @@ public sealed class UrlShortenerService : IUrlShortenerService
 
         ShortUrl? persistedEntity = null;
 
-        if (!string.IsNullOrWhiteSpace(request.CustomSlug))
+        if (request.CustomSlug is not null)
         {
-            var slug = request.CustomSlug.Trim();
-            if (slug.Length < 4 || slug.Length > 32)
+            var aliasValidation = _validator.ValidateCustomAlias(request.CustomSlug);
+            if (!aliasValidation.IsValid)
             {
-                throw new ArgumentException("Custom slug must be between 4 and 32 characters in length.", nameof(request));
+                throw new ArgumentException(aliasValidation.ErrorMessage ?? "Invalid custom alias.", nameof(request));
             }
 
+            var slug = request.CustomSlug.Trim();
             if (await _repository.ExistsAsync(slug, cancellationToken))
             {
                 throw new InvalidOperationException($"Custom alias '{slug}' is already taken.");
