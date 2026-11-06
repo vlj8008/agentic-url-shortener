@@ -177,7 +177,7 @@ flowchart TD
 **Purpose**: Final end-to-end validation, documentation alignment, and release readiness (Gate 3).  
 **Entry Gate**: Synchronization Barrier 3 passed.
 
-- [ ] **T029** `[P]` Execute full test suite with code coverage collection (`dotnet test --collect:"XPlat Code Coverage"`) to verify $\ge 80\%$ coverage across domain and API modules (`SC-002`).
+- [x] **T029** `[P]` Execute full test suite with code coverage collection (`dotnet test --collect:"XPlat Code Coverage"`) to verify $\ge 80\%$ coverage across domain and API modules (`SC-002`).
 - [ ] **T030** Generate the **Final Engineering Summary** in `README.md` / `specs/` documenting architecture overview, scenario walkthroughs, validation results, reliability metrics, assumptions, limitations, and trade-offs.
 
 ---
