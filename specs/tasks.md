@@ -161,7 +161,7 @@ flowchart TD
   - `BrownfieldAnalyzerAgent.cs` (repository file/endpoint impact scanner)
   - `TaskDecomposerAgent.cs` (DAG builder & dynamic downstream re-planner on gate rejection or upstream change)
   - `VerificationAndRollbackAgent.cs` (runs `dotnet build`/`dotnet test` with $\le 3$ bounded self-correction retries and rollback)
-- [ ] **T027** `[US4]` Implement scenario runners and reusable CLI flags in `src/Orchestrator.Cli/Scenarios/` and `Program.cs`:
+- [x] **T027** `[US4]` Implement scenario runners and reusable CLI flags in `src/Orchestrator.Cli/Scenarios/` and `Program.cs`:
   - Interactive Zero-Config Evaluation Mode for **Greenfield**, **Brownfield**, and **Ambiguous** scenarios (plus live LLM routing when API keys are configured)
   - Reusable CLI flags (`--workspace <path>`, `--init`, `--verify`) for scaffolding and governing any repository in the workspace (depends on `T025`, `T026`).
 
