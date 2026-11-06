@@ -166,7 +166,7 @@ flowchart TD
   - Reusable CLI flags (`--workspace <path>`, `--init`, `--verify`) for scaffolding and governing any repository in the workspace (depends on `T025`, `T026`).
 
 ### Automated Tests for User Story 4
-- [ ] **T028** `[P]` `[US4]` Write unit tests in `tests/UrlShortener.UnitTests/OrchestratorStateMachineTests.cs` verifying non-linear DAG ordering, parallel wave grouping, dynamic downstream re-planning on `[R]eject`, bounded retry counting ($\le 3$), automatic rollback trigger on 3rd failure, and MTTR telemetry calculations.
+- [x] **T028** `[P]` `[US4]` Write unit tests in `tests/UrlShortener.UnitTests/OrchestratorStateMachineTests.cs` verifying non-linear DAG ordering, parallel wave grouping, dynamic downstream re-planning on `[R]eject`, bounded retry counting ($\le 3$), automatic rollback trigger on 3rd failure, and MTTR telemetry calculations.
 
 **ðŸš¦ Exit Gate (Synchronization Barrier 3)**: Full solution (`UrlShortener.Api`, `Orchestrator.Cli`, and all 3 test suites) builds with 0 warnings/errors and passes 100% of tests.
 
