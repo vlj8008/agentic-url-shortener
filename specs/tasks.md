@@ -3,23 +3,23 @@
 **Branch**: `spec/tasks-md` | **Date**: 2026-11-04  
 **Input**: Design documents from [`specs/`](./)  
 **Prerequisites**: [`specs/constitution.md`](./constitution.md), [`specs/spec.md`](./spec.md), [`specs/plan.md`](./plan.md)  
-**Organization**: Tasks are structured as an explicit **Non-Linear Dependency Graph (DAG)** grouped by phase and user story (`US1`–`US4`) with explicit Entry/Exit Gates and synchronization barriers.
+**Organization**: Tasks are structured as an explicit **Non-Linear Dependency Graph (DAG)** grouped by phase and user story (`US1`â€“`US4`) with explicit Entry/Exit Gates and synchronization barriers.
 
 ---
 
 ## Format: `[ID] [P?] [Story?] Description`
 
-- **`T001`–`T030`**: Unique, atomic engineering task identifier.
-- **`[P]`**: **Parallelizable Task** — touches isolated files/modules and can execute concurrently within its wave prior to the phase's synchronization barrier.
-- **`[US1]`–`[US4]`**: Maps directly to the prioritized User Stories in [`specs/spec.md`](./spec.md):
-  - **`[US1]`**: Greenfield — Core URL Shortening, Anti-SSRF & Redirection (Priority: P1)
-  - **`[US2]`**: Brownfield — Privacy-Safe Analytics & Link Revocation (Priority: P2)
-  - **`[US3]`**: Ambiguous Requirements — Custom Aliases, Expiration & Rate Limiting (Priority: P2)
+- **`T001`â€“`T030`**: Unique, atomic engineering task identifier.
+- **`[P]`**: **Parallelizable Task** â€” touches isolated files/modules and can execute concurrently within its wave prior to the phase's synchronization barrier.
+- **`[US1]`â€“`[US4]`**: Maps directly to the prioritized User Stories in [`specs/spec.md`](./spec.md):
+  - **`[US1]`**: Greenfield â€” Core URL Shortening, Anti-SSRF & Redirection (Priority: P1)
+  - **`[US2]`**: Brownfield â€” Privacy-Safe Analytics & Link Revocation (Priority: P2)
+  - **`[US3]`**: Ambiguous Requirements â€” Custom Aliases, Expiration & Rate Limiting (Priority: P2)
   - **`[US4]`**: Reusable Agentic SDLC Orchestrator CLI (`Orchestrator.Cli`) (Priority: P1)
 
 ---
 
-## 🕸️ Non-Linear Dependency Graph & Synchronization Barriers
+## ðŸ•¸ï¸ Non-Linear Dependency Graph & Synchronization Barriers
 
 Unlike naive linear task chaining, our orchestration model executes independent workstreams in parallel waves and converges at strict synchronization barriers:
 
@@ -72,7 +72,7 @@ flowchart TD
 - [x] **T003** `[P]` Initialize console orchestrator project `src/Orchestrator.Cli/Orchestrator.Cli.csproj` with clean dependency injection and `Microsoft.Extensions.AI` abstraction support.
 - [x] **T004** `[P]` Initialize the 3 automated test projects (`tests/UrlShortener.UnitTests`, `tests/UrlShortener.ContractTests`, and `tests/UrlShortener.SecurityTests`) referencing `xUnit` and `Microsoft.AspNetCore.Mvc.Testing`.
 
-**🚦 Exit Gate (Synchronization Barrier 1)**: `dotnet build AgenticUrlShortener.sln` succeeds with 0 errors and 0 warnings.
+**ðŸš¦ Exit Gate (Synchronization Barrier 1)**: `dotnet build AgenticUrlShortener.sln` succeeds with 0 errors and 0 warnings.
 
 ---
 
@@ -87,11 +87,11 @@ flowchart TD
 - [x] **T008** Implement `src/UrlShortener.Api/Infrastructure/Data/UrlShortenerDbContext.cs`, `IUrlRepository.cs`, and `EfUrlRepository.cs` using parameterized queries and `.AsNoTracking()` for read queries (depends on `T005`).
 - [x] **T009** Define SOLID domain service abstractions in `src/UrlShortener.Api/Services/` (`IBase62CodeGenerator.cs`, `IUrlSecurityValidator.cs`, `IIpPrivacyHasher.cs`, `IUrlShortenerService.cs`) (depends on `T005`, `T006`).
 
-**🚦 Exit Gate (Synchronization Barrier 2)**: Foundation compiles cleanly; parallel tracks (`US1` and `US4`) are unblocked.
+**ðŸš¦ Exit Gate (Synchronization Barrier 2)**: Foundation compiles cleanly; parallel tracks (`US1` and `US4`) are unblocked.
 
 ---
 
-## Phase 3: User Story 1 — Greenfield: Core URL Shortening, Anti-SSRF & Redirection (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 â€” Greenfield: Core URL Shortening, Anti-SSRF & Redirection (Priority: P1) ðŸŽ¯ MVP
 
 **Goal**: Deliver the complete Greenfield URL Shortener MVP with cryptographic Base62 generation, Anti-SSRF protection, sub-50ms cached redirection, and health probes.  
 **Entry Gate**: Synchronization Barrier 2 passed.
@@ -107,11 +107,11 @@ flowchart TD
 - [x] **T015** `[P]` `[US1]` Write OpenAPI contract tests in `tests/UrlShortener.ContractTests/GreenfieldContractTests.cs` verifying `201 Created`, `302 Found` (`no-store`), `404 Not Found`, and `/health` payload schemas.
 - [x] **T016** `[P]` `[US1]` Write Anti-SSRF security tests in `tests/UrlShortener.SecurityTests/SsrfAndSchemeSecurityTests.cs` verifying 100% rejection of loopback, RFC 1918, `169.254.169.254`, `javascript:`, and `file:` URIs.
 
-**🚦 Exit Gate**: User Story 1 (Greenfield MVP) builds and passes all unit, contract, and SSRF security tests independently.
+**ðŸš¦ Exit Gate**: User Story 1 (Greenfield MVP) builds and passes all unit, contract, and SSRF security tests independently.
 
 ---
 
-## Phase 4: User Story 2 — Brownfield: Privacy-Safe Analytics & Link Revocation (Priority: P2)
+## Phase 4: User Story 2 â€” Brownfield: Privacy-Safe Analytics & Link Revocation (Priority: P2)
 
 **Goal**: Evolve the Greenfield codebase (Brownfield scenario) by adding non-blocking click analytics and soft-delete link revocation without breaking existing redirection.  
 **Entry Gate**: Phase 3 (`US1`) completed; Brownfield impact analysis verified against [`specs/plan.md`](./plan.md).
@@ -125,11 +125,11 @@ flowchart TD
 - [x] **T020** `[P]` `[US2]` Write unit tests in `tests/UrlShortener.UnitTests/PrivacyAndAnalyticsTests.cs` verifying salted SHA-256 IP hashing determinism and non-blocking channel queueing.
 - [x] **T021** `[P]` `[US2]` Write brownfield contract tests in `tests/UrlShortener.ContractTests/BrownfieldAnalyticsAndRevocationTests.cs` verifying `GET /api/v1/urls/{shortCode}` click/unique-visitor counts, `DELETE /api/v1/urls/{shortCode}` (`204 No Content`), and `410 Gone` on revoked links with zero regression to `US1`.
 
-**🚦 Exit Gate**: Both Greenfield (`US1`) and Brownfield (`US2`) suites pass 100%.
+**ðŸš¦ Exit Gate**: Both Greenfield (`US1`) and Brownfield (`US2`) suites pass 100%.
 
 ---
 
-## Phase 5: User Story 3 — Ambiguous Requirements: Custom Aliases, Expiration & Rate Limiting (Priority: P2)
+## Phase 5: User Story 3 â€” Ambiguous Requirements: Custom Aliases, Expiration & Rate Limiting (Priority: P2)
 
 **Goal**: Implement the normalized rules derived from `/speckit.clarify` (custom aliases with `409 Conflict`, UTC expiration returning `410 Gone`, and per-IP rate limiting returning `429 Too Many Requests`).  
 **Entry Gate**: Phase 3 (`US1`) completed.
@@ -139,16 +139,16 @@ flowchart TD
 - [x] **T023** `[US3]` Configure ASP.NET Core Rate Limiting middleware in `src/UrlShortener.Api/Program.cs` enforcing 10 req/min on `POST /api/v1/urls` and 100 req/min on `GET /{shortCode}` per client IP, returning HTTP `429 Too Many Requests` with `Retry-After: 60` and RFC 7807 `ProblemDetails`.
 
 ### Automated Tests for User Story 3
-- [ ] **T024** `[P]` `[US3]` Write security and boundary tests in `tests/UrlShortener.SecurityTests/RateLimitAndAliasConflictTests.cs` verifying `409 Conflict` on duplicate custom aliases, `400 Bad Request` on reserved words/past expiration dates, `410 Gone` on expired links, and `429 Too Many Requests` with `Retry-After` header when rate limits are exceeded.
+- [x] **T024** `[P]` `[US3]` Write security and boundary tests in `tests/UrlShortener.SecurityTests/RateLimitAndAliasConflictTests.cs` verifying `409 Conflict` on duplicate custom aliases, `400 Bad Request` on reserved words/past expiration dates, `410 Gone` on expired links, and `429 Too Many Requests` with `Retry-After` header when rate limits are exceeded.
 
-**🚦 Exit Gate**: All URL Shortener requirements (`FR-001`–`FR-015`) pass 100% of unit, contract, and security tests.
+**ðŸš¦ Exit Gate**: All URL Shortener requirements (`FR-001`â€“`FR-015`) pass 100% of unit, contract, and security tests.
 
 ---
 
-## Phase 6: User Story 4 — Reusable Agentic SDLC Orchestrator CLI (`Orchestrator.Cli`) (Priority: P1 — Critical Differentiator)
+## Phase 6: User Story 4 â€” Reusable Agentic SDLC Orchestrator CLI (`Orchestrator.Cli`) (Priority: P1 â€” Critical Differentiator)
 
 **Goal**: Build the standalone, domain-agnostic C# SDLC Orchestrator CLI demonstrating non-linear DAG execution, human approval checkpoints, bounded retries ($\le 3$) with Git rollback, dynamic re-planning, telemetry reporting, and workspace-reusable CLI flags.  
-**Entry Gate**: Synchronization Barrier 2 passed (can execute in parallel with Phases 3–5).
+**Entry Gate**: Synchronization Barrier 2 passed (can execute in parallel with Phases 3â€“5).
 
 ### Implementation for User Story 4
 - [ ] **T025** `[P]` `[US4]` Implement core engine components in `src/Orchestrator.Cli/Engine/`:
@@ -168,7 +168,7 @@ flowchart TD
 ### Automated Tests for User Story 4
 - [ ] **T028** `[P]` `[US4]` Write unit tests in `tests/UrlShortener.UnitTests/OrchestratorStateMachineTests.cs` verifying non-linear DAG ordering, parallel wave grouping, dynamic downstream re-planning on `[R]eject`, bounded retry counting ($\le 3$), automatic rollback trigger on 3rd failure, and MTTR telemetry calculations.
 
-**🚦 Exit Gate (Synchronization Barrier 3)**: Full solution (`UrlShortener.Api`, `Orchestrator.Cli`, and all 3 test suites) builds with 0 warnings/errors and passes 100% of tests.
+**ðŸš¦ Exit Gate (Synchronization Barrier 3)**: Full solution (`UrlShortener.Api`, `Orchestrator.Cli`, and all 3 test suites) builds with 0 warnings/errors and passes 100% of tests.
 
 ---
 
@@ -182,7 +182,7 @@ flowchart TD
 
 ---
 
-## 🔍 Cross-Artifact Consistency Analysis (`/speckit.analyze`)
+## ðŸ” Cross-Artifact Consistency Analysis (`/speckit.analyze`)
 
 In accordance with Phase 7 (`analyze`) of the GitHub Spec Kit lifecycle, the traceability matrix below verifies 100% bidirectional alignment across all 4 specification artifacts with zero drift:
 
@@ -195,5 +195,5 @@ In accordance with Phase 7 (`analyze`) of the GitHub Spec Kit lifecycle, the tra
 | **`FR-007`, `FR-008`** | Domain Rule 5 (`Channel<ClickEvent>`, SHA-256 IP) | `US2` (Brownfield) | `IpPrivacyHasher`, `ClickAnalyticsBackgroundService`, `ADR-003` | `T017`, `T018`, `T019` | `UnitTests` (`T020`) |
 | **`FR-009`, `FR-010`, `FR-011`, `FR-012`** | Domain Rule 3 (Analytics, Revocation, `410`/`404`) | `US2` & `US3` | `UrlShortenerService`, `UrlEndpoints` | `T019`, `T021`, `T022` | `ContractTests` (`T021`), `SecurityTests` (`T024`) |
 | **`FR-013`** | Domain Rule 4 (Rate Limiting `429`) | `US3` (Ambiguous) | Rate Limiting Middleware (`Program.cs`) | `T023`, `T024` | `SecurityTests` (`T024`) |
-| **`FR-014`, `FR-015`** | Principle 6 (RFC 7807 `ProblemDetails` & `/health`) | `US1`–`US3` | `GlobalProblemDetailsExceptionHandler`, `UrlEndpoints` | `T007`, `T013` | `ContractTests` (`T015`) |
+| **`FR-014`, `FR-015`** | Principle 6 (RFC 7807 `ProblemDetails` & `/health`) | `US1`â€“`US3` | `GlobalProblemDetailsExceptionHandler`, `UrlEndpoints` | `T007`, `T013` | `ContractTests` (`T015`) |
 | **`FR-016`** | Principle 2 & Domain Rule 6 (Orchestrator CLI) | `US4` (Orchestrator) | `SdlcStateMachine`, 4 Agents, `ADR-004` | `T025`, `T026`, `T027` | `UnitTests` (`T028`) |
