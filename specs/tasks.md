@@ -123,7 +123,7 @@ flowchart TD
 
 ### Automated Tests for User Story 2
 - [x] **T020** `[P]` `[US2]` Write unit tests in `tests/UrlShortener.UnitTests/PrivacyAndAnalyticsTests.cs` verifying salted SHA-256 IP hashing determinism and non-blocking channel queueing.
-- [ ] **T021** `[P]` `[US2]` Write brownfield contract tests in `tests/UrlShortener.ContractTests/BrownfieldAnalyticsAndRevocationTests.cs` verifying `GET /api/v1/urls/{shortCode}` click/unique-visitor counts, `DELETE /api/v1/urls/{shortCode}` (`204 No Content`), and `410 Gone` on revoked links with zero regression to `US1`.
+- [x] **T021** `[P]` `[US2]` Write brownfield contract tests in `tests/UrlShortener.ContractTests/BrownfieldAnalyticsAndRevocationTests.cs` verifying `GET /api/v1/urls/{shortCode}` click/unique-visitor counts, `DELETE /api/v1/urls/{shortCode}` (`204 No Content`), and `410 Gone` on revoked links with zero regression to `US1`.
 
 **🚦 Exit Gate**: Both Greenfield (`US1`) and Brownfield (`US2`) suites pass 100%.
 
