@@ -136,7 +136,7 @@ flowchart TD
 
 ### Implementation for User Story 3
 - [x] **T022** `[P]` `[US3]` Enhance `UrlSecurityValidator.cs` and `UrlShortenerService.cs` to enforce custom alias regex (`^[a-zA-Z0-9_-]{4,32}$`), reserved-word blocklist (`api`, `health`, `admin`, `swagger`, `metrics`), immediate `409 Conflict` on duplicate custom aliases, and future UTC `expiresAt` validation (`410 Gone` when expired).
-- [ ] **T023** `[US3]` Configure ASP.NET Core Rate Limiting middleware in `src/UrlShortener.Api/Program.cs` enforcing 10 req/min on `POST /api/v1/urls` and 100 req/min on `GET /{shortCode}` per client IP, returning HTTP `429 Too Many Requests` with `Retry-After: 60` and RFC 7807 `ProblemDetails`.
+- [x] **T023** `[US3]` Configure ASP.NET Core Rate Limiting middleware in `src/UrlShortener.Api/Program.cs` enforcing 10 req/min on `POST /api/v1/urls` and 100 req/min on `GET /{shortCode}` per client IP, returning HTTP `429 Too Many Requests` with `Retry-After: 60` and RFC 7807 `ProblemDetails`.
 
 ### Automated Tests for User Story 3
 - [ ] **T024** `[P]` `[US3]` Write security and boundary tests in `tests/UrlShortener.SecurityTests/RateLimitAndAliasConflictTests.cs` verifying `409 Conflict` on duplicate custom aliases, `400 Bad Request` on reserved words/past expiration dates, `410 Gone` on expired links, and `429 Too Many Requests` with `Retry-After` header when rate limits are exceeded.

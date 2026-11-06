@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,13 +8,13 @@ using UrlShortener.Api.Services;
 namespace UrlShortener.Api.Endpoints;
 
 /// <summary>
-/// Minimal API endpoints for URL shortening, cached redirection, health checks, analytics, and revocation (specs/tasks.md T013, T019).
+/// Minimal API endpoints for URL shortening, cached redirection, health checks, analytics, and revocation (specs/tasks.md T013, T019, T023).
 /// </summary>
 public static class UrlEndpoints
 {
     public static IEndpointRouteBuilder MapUrlEndpoints(this IEndpointRouteBuilder app)
     {
-        // POST /api/v1/urls - Create shortened link
+        // POST /api/v1/urls - Create shortened link (Rate limited to 10 req/min per IP - T023)
         app.MapPost("/api/v1/urls", async (
             [FromBody] CreateShortUrlRequest request,
             HttpContext httpContext,
@@ -29,12 +28,21 @@ public static class UrlEndpoints
         .WithName("createShortUrl")
         .WithSummary("Create a shortened URL")
         .WithDescription("Validates destination URL, checks anti-SSRF policies, and generates a Base62/Base58 7-char short link or claims custom alias.")
+        .RequireRateLimiting("create-url-policy")
         .Produces<ShortUrlResponse>(StatusCodes.Status201Created)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
+        .Produces<ProblemDetails>(StatusCodes.Status429TooManyRequests)
         .Produces<ProblemDetails>(StatusCodes.Status503ServiceUnavailable);
 
-        // GET /{shortCode} - Sub-50ms cached redirection
+        // GET /health - Service liveness/readiness probe (Literal system route registered before parameter routes)
+        app.MapGet("/health", () => Results.Ok(new HealthStatusResponse("Healthy")))
+        .WithName("getHealth")
+        .WithSummary("Service health check")
+        .WithDescription("Liveness and readiness probe for cloud and container orchestration.")
+        .Produces<HealthStatusResponse>(StatusCodes.Status200OK);
+
+        // GET /{shortCode} - Sub-50ms cached redirection (Rate limited to 100 req/min per IP - T023)
         app.MapGet("/{shortCode}", async (
             string shortCode,
             HttpContext httpContext,
@@ -53,10 +61,7 @@ public static class UrlEndpoints
                 });
             }
 
-            var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var clientIp = !string.IsNullOrWhiteSpace(forwardedFor)
-                ? forwardedFor.Split(',')[0].Trim()
-                : httpContext.Connection.RemoteIpAddress?.ToString();
+            var clientIp = Program.GetClientIp(httpContext);
             var userAgent = httpContext.Request.Headers.UserAgent.ToString();
 
             var destinationUrl = await shortenerService.ResolveDestinationAsync(shortCode, clientIp, userAgent, cancellationToken);
@@ -78,12 +83,14 @@ public static class UrlEndpoints
         .WithName("redirectToDestination")
         .WithSummary("Redirect to original destination URL")
         .WithDescription("Resolves short code and returns HTTP 302 Found temporary redirect with Cache-Control no-store.")
+        .RequireRateLimiting("redirect-url-policy")
         .Produces(StatusCodes.Status302Found)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-        .Produces<ProblemDetails>(StatusCodes.Status410Gone);
+        .Produces<ProblemDetails>(StatusCodes.Status410Gone)
+        .Produces<ProblemDetails>(StatusCodes.Status429TooManyRequests);
 
-        // GET /api/v1/urls/{shortCode} - Url metadata and click analytics (T019)
+        // GET /api/v1/urls/{shortCode} - Url metadata and click analytics (T019 - Unthrottled)
         app.MapGet("/api/v1/urls/{shortCode}", async (
             string shortCode,
             HttpContext httpContext,
@@ -124,7 +131,7 @@ public static class UrlEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
-        // DELETE /api/v1/urls/{shortCode} - Soft revocation (T019)
+        // DELETE /api/v1/urls/{shortCode} - Soft revocation (T019 - Unthrottled)
         app.MapDelete("/api/v1/urls/{shortCode}", async (
             string shortCode,
             HttpContext httpContext,
@@ -164,13 +171,6 @@ public static class UrlEndpoints
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
-
-        // GET /health - Service liveness/readiness probe
-        app.MapGet("/health", () => Results.Ok(new HealthStatusResponse("Healthy")))
-        .WithName("getHealth")
-        .WithSummary("Service health check")
-        .WithDescription("Liveness and readiness probe for cloud and container orchestration.")
-        .Produces<HealthStatusResponse>(StatusCodes.Status200OK);
 
         return app;
     }
