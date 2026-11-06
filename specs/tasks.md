@@ -122,7 +122,7 @@ flowchart TD
 - [x] **T019** `[US2]` Extend `UrlShortenerService.cs` and `UrlEndpoints.cs` to publish non-blocking `ClickEvent` messages on redirect, serve `GET /api/v1/urls/{shortCode}` (`200 OK` metadata & unique visitor counts), and handle `DELETE /api/v1/urls/{shortCode}` (`204 No Content` soft revocation + cache invalidation, causing subsequent redirects to return `410 Gone`) (depends on `T017`, `T018`).
 
 ### Automated Tests for User Story 2
-- [ ] **T020** `[P]` `[US2]` Write unit tests in `tests/UrlShortener.UnitTests/PrivacyAndAnalyticsTests.cs` verifying salted SHA-256 IP hashing determinism and non-blocking channel queueing.
+- [x] **T020** `[P]` `[US2]` Write unit tests in `tests/UrlShortener.UnitTests/PrivacyAndAnalyticsTests.cs` verifying salted SHA-256 IP hashing determinism and non-blocking channel queueing.
 - [ ] **T021** `[P]` `[US2]` Write brownfield contract tests in `tests/UrlShortener.ContractTests/BrownfieldAnalyticsAndRevocationTests.cs` verifying `GET /api/v1/urls/{shortCode}` click/unique-visitor counts, `DELETE /api/v1/urls/{shortCode}` (`204 No Content`), and `410 Gone` on revoked links with zero regression to `US1`.
 
 **🚦 Exit Gate**: Both Greenfield (`US1`) and Brownfield (`US2`) suites pass 100%.
