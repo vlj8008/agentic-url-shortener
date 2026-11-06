@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ using UrlShortener.Api.Services;
 namespace UrlShortener.Api.Endpoints;
 
 /// <summary>
-/// Greenfield Minimal API endpoints for URL shortening, cached redirection, and health checks (specs/tasks.md T013).
+/// Minimal API endpoints for URL shortening, cached redirection, health checks, analytics, and revocation (specs/tasks.md T013, T019).
 /// </summary>
 public static class UrlEndpoints
 {
@@ -52,7 +53,10 @@ public static class UrlEndpoints
                 });
             }
 
-            var clientIp = httpContext.Connection.RemoteIpAddress?.ToString();
+            var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var clientIp = !string.IsNullOrWhiteSpace(forwardedFor)
+                ? forwardedFor.Split(',')[0].Trim()
+                : httpContext.Connection.RemoteIpAddress?.ToString();
             var userAgent = httpContext.Request.Headers.UserAgent.ToString();
 
             var destinationUrl = await shortenerService.ResolveDestinationAsync(shortCode, clientIp, userAgent, cancellationToken);
@@ -75,8 +79,91 @@ public static class UrlEndpoints
         .WithSummary("Redirect to original destination URL")
         .WithDescription("Resolves short code and returns HTTP 302 Found temporary redirect with Cache-Control no-store.")
         .Produces(StatusCodes.Status302Found)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status410Gone);
+
+        // GET /api/v1/urls/{shortCode} - Url metadata and click analytics (T019)
+        app.MapGet("/api/v1/urls/{shortCode}", async (
+            string shortCode,
+            HttpContext httpContext,
+            IUrlShortenerService shortenerService,
+            CancellationToken cancellationToken) =>
+        {
+            if (string.IsNullOrWhiteSpace(shortCode))
+            {
+                return Results.BadRequest(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Bad Request",
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    Detail = "Short code cannot be empty.",
+                    Instance = httpContext.Request.Path
+                });
+            }
+
+            var metadata = await shortenerService.GetMetadataAsync(shortCode, cancellationToken);
+            if (metadata is null)
+            {
+                return Results.NotFound(new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Not Found",
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+                    Detail = $"Short code '{shortCode}' does not exist.",
+                    Instance = httpContext.Request.Path
+                });
+            }
+
+            return Results.Ok(metadata);
+        })
+        .WithName("getUrlMetadata")
+        .WithSummary("Get shortened URL metadata and analytics")
+        .WithDescription("Retrieves aggregated click counts, unique visitor counts, and creation/expiration details.")
+        .Produces<UrlMetadataResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // DELETE /api/v1/urls/{shortCode} - Soft revocation (T019)
+        app.MapDelete("/api/v1/urls/{shortCode}", async (
+            string shortCode,
+            HttpContext httpContext,
+            IUrlShortenerService shortenerService,
+            CancellationToken cancellationToken) =>
+        {
+            if (string.IsNullOrWhiteSpace(shortCode))
+            {
+                return Results.BadRequest(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Bad Request",
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    Detail = "Short code cannot be empty.",
+                    Instance = httpContext.Request.Path
+                });
+            }
+
+            var revoked = await shortenerService.RevokeAsync(shortCode, cancellationToken);
+            if (!revoked)
+            {
+                return Results.NotFound(new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Not Found",
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+                    Detail = $"Short code '{shortCode}' does not exist.",
+                    Instance = httpContext.Request.Path
+                });
+            }
+
+            return Results.NoContent();
+        })
+        .WithName("revokeUrl")
+        .WithSummary("Revoke shortened URL")
+        .WithDescription("Soft-deletes the link by setting IsActive = false and evicting from cache. Subsequent redirects return 410 Gone.")
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
         // GET /health - Service liveness/readiness probe
         app.MapGet("/health", () => Results.Ok(new HealthStatusResponse("Healthy")))

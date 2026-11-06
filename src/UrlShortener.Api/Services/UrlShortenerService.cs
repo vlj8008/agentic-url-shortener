@@ -1,5 +1,11 @@
+using System;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using UrlShortener.Api.Domain.Contracts;
 using UrlShortener.Api.Domain.Entities;
@@ -9,7 +15,7 @@ using UrlShortener.Api.Infrastructure.Data;
 namespace UrlShortener.Api.Services;
 
 /// <summary>
-/// Implements core URL shortening and cached resolution with collision retries and telemetry hooks (specs/tasks.md T012).
+/// Implements core URL shortening and cached resolution with collision retries and telemetry hooks (specs/tasks.md T012, T019).
 /// </summary>
 public sealed class UrlShortenerService : IUrlShortenerService
 {
@@ -22,19 +28,57 @@ public sealed class UrlShortenerService : IUrlShortenerService
     private readonly IUrlSecurityValidator _validator;
     private readonly IMemoryCache _cache;
     private readonly ILogger<UrlShortenerService> _logger;
+    private readonly ChannelWriter<ClickEvent> _channelWriter;
+    private readonly IIpPrivacyHasher _privacyHasher;
 
+    /// <summary>
+    /// Legacy constructor preserving backward compatibility with Phase 3 (US1) unit tests.
+    /// </summary>
     public UrlShortenerService(
         IUrlRepository repository,
         IShortCodeGenerator codeGenerator,
         IUrlSecurityValidator validator,
         IMemoryCache cache,
         ILogger<UrlShortenerService> logger)
+        : this(
+            repository,
+            codeGenerator,
+            validator,
+            cache,
+            logger,
+            new IpPrivacyHasher(new ConfigurationBuilder().Build()),
+            Channel.CreateUnbounded<ClickEvent>().Writer)
     {
+    }
+
+    /// <summary>
+    /// Primary DI constructor used by the application host (T019).
+    /// </summary>
+    [ActivatorUtilitiesConstructor]
+    public UrlShortenerService(
+        IUrlRepository repository,
+        IShortCodeGenerator codeGenerator,
+        IUrlSecurityValidator validator,
+        IMemoryCache cache,
+        ILogger<UrlShortenerService> logger,
+        IIpPrivacyHasher privacyHasher,
+        ChannelWriter<ClickEvent> channelWriter)
+    {
+        ArgumentNullException.ThrowIfNull(repository);
+        ArgumentNullException.ThrowIfNull(codeGenerator);
+        ArgumentNullException.ThrowIfNull(validator);
+        ArgumentNullException.ThrowIfNull(cache);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(privacyHasher);
+        ArgumentNullException.ThrowIfNull(channelWriter);
+
         _repository = repository;
         _codeGenerator = codeGenerator;
         _validator = validator;
         _cache = cache;
         _logger = logger;
+        _privacyHasher = privacyHasher;
+        _channelWriter = channelWriter;
     }
 
     /// <summary>
@@ -172,6 +216,7 @@ public sealed class UrlShortenerService : IUrlShortenerService
 
     /// <summary>
     /// Resolves destination URL from cache (sub-50ms) or database fallback, verifying active status and expiration.
+    /// Publishes a non-blocking click event for asynchronous background persistence (T019).
     /// </summary>
     public async Task<string?> ResolveDestinationAsync(
         string shortCode,
@@ -203,6 +248,17 @@ public sealed class UrlShortenerService : IUrlShortenerService
         {
             throw new UrlGoneException($"The shortened link '{shortCode}' has expired or been revoked.");
         }
+
+        // Publish non-blocking click event for asynchronous background persistence (T018/T019)
+        var clickEvent = new ClickEvent
+        {
+            ShortCode = shortCode,
+            HashedIp = _privacyHasher.HashIp(clientIp),
+            UserAgent = userAgent?.Length > 512 ? userAgent[..512] : userAgent,
+            Timestamp = DateTimeOffset.UtcNow
+        };
+
+        _channelWriter.TryWrite(clickEvent);
 
         return cached.OriginalUrl;
     }
@@ -260,8 +316,10 @@ public sealed class UrlShortenerService : IUrlShortenerService
         entity.IsActive = false;
         await _repository.UpdateAsync(entity, cancellationToken);
 
-        // Evict from memory cache immediately so subsequent calls hit the revoked DB status
+        // Evict previous active entry and cache the inactive state so subsequent redirects
+        // immediately return 410 Gone in sub-50ms without hitting the database
         _cache.Remove(GetCacheKey(shortCode));
+        CacheEntry(entity);
 
         return true;
     }
