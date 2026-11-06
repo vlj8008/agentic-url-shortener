@@ -151,7 +151,7 @@ flowchart TD
 **Entry Gate**: Synchronization Barrier 2 passed (can execute in parallel with Phases 3â€“5).
 
 ### Implementation for User Story 4
-- [ ] **T025** `[P]` `[US4]` Implement core engine components in `src/Orchestrator.Cli/Engine/`:
+- [x] **T025** `[P]` `[US4]` Implement core engine components in `src/Orchestrator.Cli/Engine/`:
   - `SdlcStateMachine.cs` (non-linear state transitions & interactive human gates `[A]pprove / [R]eject / [S]afe-Stop`)
   - `DependencyGraphExecutor.cs` (executes parallel `[P]` task waves and waits at synchronization barriers)
   - `GitSnapshotManager.cs` (captures pre-execution Git checkpoints and executes automatic rollback)
