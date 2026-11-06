@@ -156,7 +156,7 @@ flowchart TD
   - `DependencyGraphExecutor.cs` (executes parallel `[P]` task waves and waits at synchronization barriers)
   - `GitSnapshotManager.cs` (captures pre-execution Git checkpoints and executes automatic rollback)
   - `TelemetryTracker.cs` (tracks Task Success Rate, Retry/Rollback Frequency, MTTR, and Stage Latency)
-- [ ] **T026** `[P]` `[US4]` Implement the 4 specialized C# agents in `src/Orchestrator.Cli/Agents/`:
+- [x] **T026** `[P]` `[US4]` Implement the 4 specialized C# agents in `src/Orchestrator.Cli/Agents/`:
   - `RequirementNormalizerAgent.cs` (ambiguity detection & spec synthesis)
   - `BrownfieldAnalyzerAgent.cs` (repository file/endpoint impact scanner)
   - `TaskDecomposerAgent.cs` (DAG builder & dynamic downstream re-planner on gate rejection or upstream change)
