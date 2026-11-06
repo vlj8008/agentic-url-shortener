@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using UrlShortener.Api.Domain.Entities;
@@ -56,6 +57,48 @@ builder.Services.AddSingleton(sp => sp.GetRequiredService<Channel<ClickEvent>>()
 builder.Services.AddSingleton(sp => sp.GetRequiredService<Channel<ClickEvent>>().Writer);
 builder.Services.AddHostedService<ClickAnalyticsBackgroundService>();
 
+// ASP.NET Core Rate Limiting Middleware (specs/tasks.md T023 & FR-013)
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy<string>("create-url-policy", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientIp(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy<string>("redirect-url-policy", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientIp(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.Headers.RetryAfter = "60";
+
+        await Results.Problem(
+            title: "Too Many Requests",
+            detail: "Rate limit exceeded. Please try again later.",
+            statusCode: StatusCodes.Status429TooManyRequests,
+            instance: context.HttpContext.Request.Path,
+            type: "https://tools.ietf.org/html/rfc6585#section-4")
+            .ExecuteAsync(context.HttpContext);
+    };
+});
+
 // OpenAPI 3.1 document generation
 builder.Services.AddOpenApi();
 
@@ -102,6 +145,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRateLimiter();
+
 // Register Greenfield Minimal API routes (T013)
 app.MapUrlEndpoints();
 
@@ -111,4 +156,27 @@ app.Run();
 /// Exposes the implicit top-level Program class so integration tests can host the API
 /// via WebApplicationFactory&lt;Program&gt; (specs/tasks.md T002).
 /// </summary>
-public partial class Program { }
+public partial class Program
+{
+    /// <summary>
+    /// Safe client IP extractor resolving the first non-empty IP from X-Forwarded-For
+    /// or falling back to RemoteIpAddress / 127.0.0.1.
+    /// </summary>
+    internal static string GetClientIp(HttpContext httpContext)
+    {
+        var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(forwardedFor))
+        {
+            var firstIp = forwardedFor
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(firstIp))
+            {
+                return firstIp;
+            }
+        }
+
+        return httpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+    }
+}
